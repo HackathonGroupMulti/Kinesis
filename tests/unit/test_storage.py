@@ -200,9 +200,11 @@ async def test_artifact_paths_cannot_escape(store: SqliteJobStore, tmp_path: Pat
         artifacts.job_dir("..")
 
 
-async def test_sweep_removes_old_job_dirs(store: SqliteJobStore, tmp_path: Path) -> None:
+async def test_remove_job_files_is_idempotent(store: SqliteJobStore, tmp_path: Path) -> None:
     artifacts = SqliteArtifactStore(store.db, tmp_path / "jobs")
-    artifacts.job_dir("job_000001").mkdir(parents=True)
-    assert await artifacts.sweep(older_than_s=3600) == 0
-    assert await artifacts.sweep(older_than_s=-1) == 1
+    (artifacts.job_dir("job_000001") / "work").mkdir(parents=True)
+    (artifacts.job_dir("job_000001") / "work" / "x.log").write_text("x")
+    await artifacts.register("job_000001", "work/x.log", ArtifactKind.LOG, "text/plain")
+    assert await artifacts.remove_job_files("job_000001") is True
     assert not artifacts.job_dir("job_000001").exists()
+    assert await artifacts.remove_job_files("job_000001") is False

@@ -168,6 +168,33 @@ class SqliteJobStore:
 
         return await self.db.tx(op)
 
+    async def scenes_before(self, cutoff: datetime) -> list[str]:
+        """Scenes uploaded before ``cutoff``."""
+
+        def op(c: sqlite3.Connection) -> list[str]:
+            rows = c.execute("SELECT scene_id, created_at FROM scenes").fetchall()
+            return [
+                str(r["scene_id"]) for r in rows if datetime.fromisoformat(r["created_at"]) < cutoff
+            ]
+
+        return await self.db.tx(op)
+
+    async def finished_jobs_before(self, cutoff: datetime) -> list[str]:
+        """Jobs in a terminal status whose last update was before ``cutoff``."""
+        terminal = [s.value for s in JobStatus if s.is_terminal]
+
+        def op(c: sqlite3.Connection) -> list[str]:
+            rows = c.execute(
+                f"SELECT job_id, updated_at FROM jobs WHERE status IN "  # noqa: S608 - fixed enum
+                f"({', '.join('?' * len(terminal))})",
+                terminal,
+            ).fetchall()
+            return [
+                str(r["job_id"]) for r in rows if datetime.fromisoformat(r["updated_at"]) < cutoff
+            ]
+
+        return await self.db.tx(op)
+
     async def create_job(
         self, job: RepairJob, *, idempotency_key: str, body_hash: str
     ) -> tuple[RepairJob, bool]:
@@ -448,22 +475,19 @@ class SqliteArtifactStore:
             raise FileNotFoundError(artifact_id)
         return value
 
-    async def sweep(self, older_than_s: float) -> int:
-        """Delete job directories (and their artifact rows) not modified for ``older_than_s``."""
-        cutoff = time.time() - older_than_s
-        removed = 0
-        if not self.jobs_root.exists():
-            return 0
-        for job_dir in self.jobs_root.iterdir():
-            if job_dir.is_dir() and job_dir.stat().st_mtime < cutoff:
-                await asyncio.to_thread(shutil.rmtree, job_dir, True)
+    async def remove_job_files(self, job_id: str) -> bool:
+        """Delete a job's directory and artifact rows. The job record itself is kept (history,
+        product stats). Returns whether there was anything to delete."""
+        job_dir = self.job_dir(job_id)
+        existed = job_dir.exists()
+        if existed:
+            await asyncio.to_thread(shutil.rmtree, job_dir, True)
 
-                def forget(c: sqlite3.Connection, job_id: str = job_dir.name) -> None:
-                    c.execute("DELETE FROM artifacts WHERE job_id = ?", (job_id,))
+        def forget(c: sqlite3.Connection) -> int:
+            return c.execute("DELETE FROM artifacts WHERE job_id = ?", (job_id,)).rowcount
 
-                await self.db.tx(forget)
-                removed += 1
-        return removed
+        rows = await self.db.tx(forget)
+        return existed or rows > 0
 
 
 __all__ = ["Database", "SqliteArtifactStore", "SqliteJobStore", "StorageError", "utcnow"]

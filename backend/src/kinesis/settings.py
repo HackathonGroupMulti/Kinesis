@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     kinesis_data_dir: Path = Path("var")
     kinesis_max_upload_mb: int = Field(default=200, ge=1, le=2048)
     kinesis_redis_url: str | None = None
+    # retention (ARCHITECTURE §8): finished job workspaces and uploads older than this are
+    # deleted by a sweeper that runs every kinesis_sweep_interval_s. 0 disables the sweeper.
+    kinesis_retention_days: float = Field(default=7, ge=0)
+    kinesis_sweep_interval_s: float = Field(default=3600, gt=0)
 
     # blender worker
     kinesis_blender_bin: Path | None = None

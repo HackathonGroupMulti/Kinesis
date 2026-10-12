@@ -270,7 +270,7 @@ An invalid plan never reaches a worker.
   - are loaded with `--factory-startup`. Auto-run Python scripts are disabled by default in background mode, and the worker asserts this.
 - The worker runs with a fixed argv, no shell, a timeout and a single job directory. Containerized workers get a read-only image plus one writable job-dir mount.
 - There is no `pickle`, `yaml.load` or `eval` anywhere. Persistence and the worker protocol use JSON only.
-- A TTL sweeper deletes job directories, defaulting to 7 days.
+- A retention sweeper runs at start-up and then hourly (`KINESIS_RETENTION_DAYS`, default 7; `KINESIS_SWEEP_INTERVAL_S`). It deletes the files of **finished** jobs and of uploaded scenes older than that. Job records, events and decisions are kept, so history and product stats survive. Running jobs and jobs awaiting a decision are never touched.
 
 ## 9. Repository layout
 
