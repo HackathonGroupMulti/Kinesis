@@ -28,6 +28,11 @@ MIN_MODEL_LOCK_STRENGTH = 0.75
 the original motion" as lock_strength 0.35-0.45, which left 3.4-6.1 cm of slide. Both
 candidates must be real repairs; they differ in anchor, blend and smoothing instead."""
 
+MIN_MODEL_BLEND_FRAMES = 3
+"""Floor for model-chosen blends (2026-10-12): Nemotron chose 2-frame blends for A, which
+gave a foot jerk ratio of 2.4-2.8 (golden limit 2.0). Offline sweep on the fixture: 2 frames
+2.75, 3 frames 1.79, 4 frames 1.35, with the same residual slip. 3 matches preset A."""
+
 
 @dataclass(frozen=True, slots=True)
 class PlanDecision:
@@ -59,6 +64,11 @@ def semantic_errors(
             errors.append(
                 f"candidate {label.value}: lock_strength {params.lock_strength:g} is below "
                 f"{MIN_MODEL_LOCK_STRENGTH:g} and would leave visible sliding"
+            )
+        if params.blend_frames < MIN_MODEL_BLEND_FRAMES:
+            errors.append(
+                f"candidate {label.value}: blend_frames {params.blend_frames} is below "
+                f"{MIN_MODEL_BLEND_FRAMES} and would make the foot pop in and out of the lock"
             )
     return errors
 

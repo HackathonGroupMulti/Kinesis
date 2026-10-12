@@ -21,6 +21,10 @@ The owner dropped the formal user study on 2026-10-09. Kinesis therefore claims 
 
 The first 5-scene benchmark recommended B in every model-planned scene, including scenes where B left 1.3-2.3 cm of slip and A left none. Smoothness and the visual review outweighed the residual slip. Since 2026-10-12 a candidate that leaves 1 cm or more is recommended only when no ungated candidate gets below 1 cm. In the re-run, every recommended candidate in every pass is under 1 cm.
 
+### Finding: the model planned jerky locks
+
+With prompt `planner/2`, Nemotron chose 2-frame blends for candidate A. The planted foot's jerk ratio was 2.4-2.8, against 1.6-1.8 for the presets and a golden limit of 2.0. An offline sweep on the fixture showed blend length is the cause and costs no slip: 2 frames gave 2.75, 3 frames 1.79, 4 frames 1.35, 6 frames 1.10, all with 0.00 cm left. Since 2026-10-12 the plan gate rejects blends shorter than 3 frames, and prompt `planner/3` asks for 4-6 frames on A and 6-10 on B. In the re-run, all 5 model plans passed the gate (A 5 frames, B 8). Model-planned A's jerk ratio fell to 0.73-1.17, still with 0.00 cm of slip in every scene.
+
 ## Hardening
 
 | Item | Status |
@@ -31,5 +35,4 @@ The first 5-scene benchmark recommended B in every model-planned scene, includin
 
 ## Open
 
-- **Model-planned A is jerkier than the presets.** The jerk ratio of the planted foot is 2.4-2.8 with the model's parameters, against 1.6-1.8 with the presets and a golden threshold of 2.0.
 - **Nebius Serverless Jobs live runs** wait on the owner's Nebius AI Cloud account ([PHASE6.md](PHASE6.md)).
