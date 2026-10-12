@@ -90,7 +90,7 @@ The MVP is complete **only** when this exact scenario works reproducibly:
 6. The original source animation stays byte-for-byte unchanged.
 7. Both candidates produce previews and deterministic metrics.
 8. At least one candidate reduces planted displacement by **≥ 80%** (the golden threshold).
-9. Nemotron evaluates the candidates through Nebius Token Factory.
+9. Nemotron evaluates the candidates through Nebius Token Factory. *(As built: Nemotron 3 Super plans the candidates. No Nemotron model on Token Factory accepts images (spike S4), so the visual review uses `zai-org/GLM-5.3-Flash`, chosen by a bake-off.)*
 10. The Kotlin client displays Original / A / B.
 11. The user selects their preferred result.
 12. The selected correction is applied non-destructively as an NLA layer in an output `.blend`.

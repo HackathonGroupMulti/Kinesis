@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import shutil
 import sys
@@ -25,6 +26,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from benchlib import ROOT, environment, make_service, run_scene, write_json
+from prometheus_client import REGISTRY
 
 from kinesis.jobs.local import LocalJobRunner
 from kinesis.providers.base import ModelProvider
@@ -47,6 +49,27 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(errors="replace")
 
 
+def _counter(name: str) -> dict[tuple[str, ...], float]:
+    """Current values of a Prometheus counter, keyed by label values."""
+    return {
+        tuple(s.labels.values()): s.value
+        for metric in REGISTRY.collect()
+        if metric.name == name
+        for s in metric.samples
+        if s.name.endswith("_total")
+    }
+
+
+def original_hashes(job_dir: Path) -> list[str]:
+    """Every original-action hash the worker reported: at extract, before and after each
+    candidate was applied, and at export. All equal means the source action is untouched."""
+    out: list[str] = []
+    for result in sorted((job_dir / "work").glob("*.result.json")):
+        data = json.loads(result.read_text(encoding="utf-8"))
+        out += [str(v) for k, v in sorted(data.items()) if k.startswith("original_action_hash")]
+    return out
+
+
 def say(step: str, text: str) -> None:
     print(f"[{step:>9}] {text}", flush=True)
 
@@ -56,7 +79,11 @@ async def main(argv: list[str]) -> int:
     ap.add_argument("--mock", action="store_true", help="use the mock provider (no Token Factory)")
     args = ap.parse_args(argv)
     blender = os.environ.get("KINESIS_BLENDER_BIN") or next(
-        (str(p) for p in (ROOT / ".tools").glob("blender-4.5.14*/blender*") if p.stem == "blender"),
+        (
+            str(p)
+            for p in (ROOT / ".tools").glob("blender-4.5.14*/blender*")
+            if p.name in ("blender", "blender.exe") and p.is_file()
+        ),
         "",
     )
     if not blender:
@@ -81,6 +108,8 @@ async def main(argv: list[str]) -> int:
     data_dir = ROOT / "var" / "demo" / time.strftime("%Y%m%d-%H%M%S")
     service = make_service(data_dir, LocalJobRunner(Path(blender)), provider)
     say("scene", f"{FIXTURE.relative_to(ROOT)}: left foot, frames 45-90")
+    tokens_before = _counter("kinesis_provider_tokens")
+    cost_before = sum(_counter("kinesis_provider_cost_usd").values())
     try:
         run = await run_scene(
             service,
@@ -144,10 +173,24 @@ async def main(argv: list[str]) -> int:
             )
 
     events = run.events
-    hash_ok = not any(
+    hashes = original_hashes(run.job_dir)
+    hash_ok = len(hashes) >= 4 and len(set(hashes)) == 1
+    hash_ok = hash_ok and not any(
         e.type is JobEventType.NODE_FAILED and "hash" in (e.message or "") for e in events
     )
+    tokens = {
+        k: v - tokens_before.get(k, 0.0) for k, v in _counter("kinesis_provider_tokens").items()
+    }
     model_calls: list[dict[str, Any]] = []
+    if job.plan is not None and job.plan.model_id:
+        model_calls.append(
+            {
+                "task": "plan",
+                "model": job.plan.model_id,
+                "prompt_tokens": int(tokens.get((job.plan.model_id, "prompt"), 0)),
+                "completion_tokens": int(tokens.get((job.plan.model_id, "completion"), 0)),
+            }
+        )
     if ev is not None:
         model_calls += [
             {"task": "evaluate", "model": v.model_id, "prompt_tokens": v.usage.prompt_tokens,
@@ -189,8 +232,17 @@ async def main(argv: list[str]) -> int:
         "recommended": ev.recommended.value if ev and ev.recommended else None,
         "decision": job.decision.choice.value if job.decision else None,
         "original_action_untouched": hash_ok,
+        "original_action_hash_checks": len(hashes),
+        "model_cost_usd": round(
+            sum(_counter("kinesis_provider_cost_usd").values()) - cost_before, 6
+        ),
         "output": job.output.model_dump(mode="json") if job.output else None,
     }
+    say(
+        "verify",
+        f"original action hash identical at {len(hashes)} checkpoints: {hash_ok}; "
+        f"model cost ${record['model_cost_usd']:.4f}",
+    )
     write_json(OUT, record)
     say("done", f"wrote {OUT.relative_to(ROOT)}")
     return 0 if job.status.value == "COMPLETED" else 1
