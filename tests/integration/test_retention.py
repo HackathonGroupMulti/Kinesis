@@ -7,10 +7,10 @@ import time
 from typing import Any
 
 import pytest
+from conftest import FAKE_BLEND, chunks, job_request, run_job
 
 from kinesis.jobs.service import JobService, RequestError
 from kinesis.schemas import DecisionChoice, DecisionRequest, JobStatus
-from tests.conftest import FAKE_BLEND, chunks, job_request, run_job
 
 DAY = 86400.0
 
