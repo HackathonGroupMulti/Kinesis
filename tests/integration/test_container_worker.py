@@ -107,7 +107,7 @@ async def test_container_job_matches_golden_results(tmp_path: Path) -> None:
         assert m.outside_window_max_cm <= 0.001
         assert {a.kind.value for a in candidate.artifacts} >= {"PREVIEW_FRAMES", "CANDIDATE_BLEND"}
     assert job.evaluation is not None
-    assert job.evaluation.recommended is CandidateLabel.B
+    assert job.evaluation.recommended is CandidateLabel.A
 
     await service.decide(job.job_id, DecisionRequest(choice=DecisionChoice.B))
     await service.wait_idle()

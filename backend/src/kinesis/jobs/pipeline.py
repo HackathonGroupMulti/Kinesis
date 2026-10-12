@@ -832,6 +832,7 @@ async def _evaluate(
         ranking,
         {v.candidate_id: v for v in visual},
         visual_ok=evaluator_status is EvaluatorStatus.OK,
+        residual_cm={s.candidate_id: s.metrics.planted_displacement_cm_after for s in scored},
     )
     reason = rec.reason
     if evaluator_status is EvaluatorStatus.DEGRADED:

@@ -74,3 +74,24 @@ def test_a_visual_tie_is_not_reported_as_disagreement() -> None:
     rec = recommend(ranking, visual, visual_ok=True)
     assert rec.label is A
     assert "favour" not in rec.reason  # identical visual scores: no one is favoured
+
+
+def test_a_candidate_over_the_acceptance_line_loses_to_one_under_it() -> None:
+    """UAL walk, 2026-10-09: B scored higher on smoothness and looks, but left 1.54 cm."""
+    ranking = [rank(B, 0.80), rank(A, 0.75)]
+    visual = {"a" * 16: judged(A, 3), "b" * 16: judged(B, 5)}
+    residual = {"a" * 16: 0.0, "b" * 16: 1.54}
+    rec = recommend(ranking, visual, visual_ok=True, residual_cm=residual)
+    assert rec.label is A
+    assert "B leaves 1.5 cm" in rec.reason
+    assert recommend(ranking, {}, visual_ok=False, residual_cm=residual).label is A
+
+
+def test_the_acceptance_line_only_filters_when_someone_passes() -> None:
+    ranking = [rank(B, 0.80), rank(A, 0.75)]
+    both_pass = {"a" * 16: 0.0, "b" * 16: 0.4}
+    both_fail = {"a" * 16: 2.0, "b" * 16: 1.5}
+    for residual in (both_pass, both_fail):
+        rec = recommend(ranking, {}, visual_ok=False, residual_cm=residual)
+        assert rec.label is B
+        assert "acceptance" not in rec.reason

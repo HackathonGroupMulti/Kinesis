@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from benchlib import ROOT, SceneRun, environment, make_service, run_scene, write_json
 from prometheus_client import REGISTRY
 
+from kinesis.evaluation.metrics import ACCEPTANCE_SLIP_CM
 from kinesis.jobs.container import ContainerJobRunner
 from kinesis.jobs.local import LocalJobRunner
 from kinesis.jobs.runner import JobRunner
@@ -50,7 +51,7 @@ STAGES = (
     "render_original",
     "evaluate",
 )
-ACCEPT_CM = 1.0
+ACCEPT_CM = ACCEPTANCE_SLIP_CM
 UAL_GLB = Path(
     os.environ.get("KINESIS_UAL_GLB")
     or ROOT
@@ -442,13 +443,27 @@ async def main(argv: list[str]) -> int:
     ap.add_argument("--no-models", action="store_true")
     ap.add_argument("--image", default="kinesis-worker:4.5.14")
     args = ap.parse_args(argv)
+    runners = [r for r in args.runners.split(",") if r]
+    if any(r.startswith("container") for r in runners):
+        # Fail before the paid `local` pass, not after it (2026-10-12: Docker was not running).
+        probe = subprocess.run(  # noqa: S603, ASYNC221 - one-off preflight
+            ["docker", "image", "inspect", args.image],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if probe.returncode != 0:
+            raise SystemExit(
+                f"container runners need Docker and the {args.image} image "
+                f"(uv run task worker-image): {probe.stderr.strip()[:300]}"
+            )
     scenes = build_scenes([s for s in args.scenes.split(",") if s])
     key = os.environ.get("NEBIUS_API_KEY")
     use_models = bool(key) and not args.no_models
     planner = os.environ.get("KINESIS_PLANNER_MODEL")
     vision = os.environ.get("KINESIS_VISION_MODEL")
     rows: list[dict[str, Any]] = []
-    for label in [r for r in args.runners.split(",") if r]:
+    for label in runners:
         provider: ModelProvider = NullProvider()
         if label == "local":
             runner: JobRunner = LocalJobRunner(Path(blender_bin()))
