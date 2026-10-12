@@ -128,3 +128,35 @@ def test_model_plan_with_a_weak_candidate_falls_back(
         "candidate B" in r and str(MIN_MODEL_LOCK_STRENGTH) in r for r in decision.rejection_reasons
     )
     assert decision.plan.candidates[CandidateLabel.B].lock_strength == 0.85
+
+
+def test_model_plan_with_a_popping_blend_falls_back(
+    selection: AnimationSelection, scope: SkeletalScope
+) -> None:
+    """2026-10-12 benchmark: 2-frame blends for A gave a jerk ratio of 2.4-2.8."""
+    import json
+
+    from kinesis.repair.plan_validation import MIN_MODEL_BLEND_FRAMES, accept_model_plan
+    from kinesis.schemas import DEFAULT_CANDIDATES, PlanSource
+
+    candidates = {k.value: v.model_dump(mode="json") for k, v in DEFAULT_CANDIDATES.items()}
+    candidates["A"]["blend_frames"] = MIN_MODEL_BLEND_FRAMES - 1
+    raw = json.dumps(
+        {
+            "repair_type": "FOOT_CONTACT", "target_bones": ["foot.L"], "frame_start": 45,
+            "frame_end": 90, "context_frames_before": 10, "context_frames_after": 10,
+            "candidates": candidates, "explanation": "A is a crisp lock",
+        }
+    )  # fmt: skip
+    decision = accept_model_plan(
+        raw, model_id="m", selection=selection, scope=scope, scene_range=(1, 120)
+    )
+    assert not decision.accepted
+    assert decision.plan.plan_source is PlanSource.FALLBACK
+    assert any("candidate A: blend_frames 2" in r for r in decision.rejection_reasons)
+    candidates["A"]["blend_frames"] = MIN_MODEL_BLEND_FRAMES
+    ok = accept_model_plan(
+        raw.replace('"blend_frames": 2', '"blend_frames": 3'),
+        model_id="m", selection=selection, scope=scope, scene_range=(1, 120),
+    )  # fmt: skip
+    assert ok.accepted
