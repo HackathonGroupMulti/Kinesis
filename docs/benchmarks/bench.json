@@ -1,7 +1,7 @@
 {
-  "finished": "2026-10-09 03:25",
+  "finished": "2026-10-12 15:39",
   "environment": {
-    "commit": "e9f83b5",
+    "commit": "62d4390",
     "dirty": true,
     "os": "Windows 11",
     "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
@@ -24,7 +24,7 @@
       ],
       "slip_cm": {
         "original": 10.002,
-        "A": 0.5,
+        "A": 0.0,
         "B": 2.294
       },
       "accepted": {
@@ -32,38 +32,38 @@
         "B": false
       },
       "jerk_rms_ratio": {
-        "A": 3.034,
+        "A": 2.765,
         "B": 1.334
       },
       "foot_lock_error_cm": {
-        "A": 0.203,
+        "A": 0.0,
         "B": 0.264
       },
       "collateral_max_cm": {
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "OK",
       "plan_source": "MODEL",
       "stage_s": {
-        "inspect": 0.585,
-        "extract_scope": 0.631,
-        "plan_repair": 5.661,
-        "apply_render_A": 4.173,
-        "apply_render_B": 4.132,
-        "render_original": 4.158,
-        "evaluate": 15.46,
-        "export": 0.577
+        "inspect": 0.691,
+        "extract_scope": 0.807,
+        "plan_repair": 5.981,
+        "apply_render_A": 5.28,
+        "apply_render_B": 5.217,
+        "render_original": 5.264,
+        "evaluate": 7.531,
+        "export": 0.678
       },
-      "upload_to_review_s": 26.625,
+      "upload_to_review_s": 20.447,
       "model_tokens": {
         "nvidia/nemotron-3-super-120b-a12b:prompt": 841,
-        "nvidia/nemotron-3-super-120b-a12b:completion": 1136,
+        "nvidia/nemotron-3-super-120b-a12b:completion": 1209,
         "zai-org/GLM-5.3-Flash:prompt": 7996,
-        "zai-org/GLM-5.3-Flash:completion": 1911
+        "zai-org/GLM-5.3-Flash:completion": 1562
       },
-      "model_cost_usd": 0.00343
+      "model_cost_usd": 0.003321
     },
     {
       "scene": "small_backward",
@@ -76,45 +76,45 @@
       "slip_cm": {
         "original": 2.802,
         "A": 0.0,
-        "B": 0.0
+        "B": 0.529
       },
       "accepted": {
         "A": true,
         "B": true
       },
       "jerk_rms_ratio": {
-        "A": 1.252,
-        "B": 1.138
+        "A": 1.243,
+        "B": 1.16
       },
       "foot_lock_error_cm": {
         "A": 0.0,
-        "B": 0.0
+        "B": 0.072
       },
       "collateral_max_cm": {
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "OK",
       "plan_source": "MODEL",
       "stage_s": {
-        "inspect": 0.526,
-        "extract_scope": 0.641,
-        "plan_repair": 3.325,
-        "apply_render_A": 4.022,
-        "apply_render_B": 3.999,
-        "render_original": 3.853,
-        "evaluate": 16.319,
-        "export": 0.575
+        "inspect": 0.609,
+        "extract_scope": 0.702,
+        "plan_repair": 3.635,
+        "apply_render_A": 4.935,
+        "apply_render_B": 4.886,
+        "render_original": 4.887,
+        "evaluate": 8.319,
+        "export": 0.65
       },
-      "upload_to_review_s": 24.905,
+      "upload_to_review_s": 18.277,
       "model_tokens": {
         "nvidia/nemotron-3-super-120b-a12b:prompt": 838,
-        "nvidia/nemotron-3-super-120b-a12b:completion": 610,
+        "nvidia/nemotron-3-super-120b-a12b:completion": 778,
         "zai-org/GLM-5.3-Flash:prompt": 7996,
-        "zai-org/GLM-5.3-Flash:completion": 1604
+        "zai-org/GLM-5.3-Flash:completion": 1957
       },
-      "model_cost_usd": 0.002802
+      "model_cost_usd": 0.003129
     },
     {
       "scene": "right_foot",
@@ -127,19 +127,19 @@
       "slip_cm": {
         "original": 6.0,
         "A": 0.0,
-        "B": 0.761
+        "B": 0.0
       },
       "accepted": {
         "A": true,
         "B": true
       },
       "jerk_rms_ratio": {
-        "A": 2.444,
-        "B": 1.661
+        "A": 2.42,
+        "B": 1.244
       },
       "foot_lock_error_cm": {
         "A": 0.0,
-        "B": 0.154
+        "B": 0.0
       },
       "collateral_max_cm": {
         "A": 0.0,
@@ -149,23 +149,23 @@
       "evaluator_status": "OK",
       "plan_source": "MODEL",
       "stage_s": {
-        "inspect": 0.502,
-        "extract_scope": 0.61,
-        "plan_repair": 5.803,
-        "apply_render_A": 3.897,
-        "apply_render_B": 3.889,
-        "render_original": 3.773,
-        "evaluate": 10.335,
-        "export": 0.562
+        "inspect": 0.64,
+        "extract_scope": 0.706,
+        "plan_repair": 6.596,
+        "apply_render_A": 4.836,
+        "apply_render_B": 4.78,
+        "render_original": 4.815,
+        "evaluate": 9.433,
+        "export": 0.74
       },
-      "upload_to_review_s": 21.238,
+      "upload_to_review_s": 22.291,
       "model_tokens": {
         "nvidia/nemotron-3-super-120b-a12b:prompt": 838,
-        "nvidia/nemotron-3-super-120b-a12b:completion": 1201,
+        "nvidia/nemotron-3-super-120b-a12b:completion": 1205,
         "zai-org/GLM-5.3-Flash:prompt": 7996,
-        "zai-org/GLM-5.3-Flash:completion": 1382
+        "zai-org/GLM-5.3-Flash:completion": 1966
       },
-      "model_cost_usd": 0.003223
+      "model_cost_usd": 0.003518
     },
     {
       "scene": "long_diagonal",
@@ -178,45 +178,45 @@
       "slip_cm": {
         "original": 8.626,
         "A": 0.0,
-        "B": 1.285
+        "B": 1.708
       },
       "accepted": {
         "A": true,
         "B": false
       },
       "jerk_rms_ratio": {
-        "A": 1.279,
-        "B": 1.109
+        "A": 2.534,
+        "B": 1.08
       },
       "foot_lock_error_cm": {
         "A": 0.0,
-        "B": 0.334
+        "B": 0.442
       },
       "collateral_max_cm": {
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "OK",
       "plan_source": "MODEL",
       "stage_s": {
-        "inspect": 0.518,
-        "extract_scope": 0.602,
-        "plan_repair": 7.152,
-        "apply_render_A": 3.949,
-        "apply_render_B": 3.904,
-        "render_original": 3.781,
-        "evaluate": 15.084,
-        "export": 0.572
+        "inspect": 0.638,
+        "extract_scope": 0.684,
+        "plan_repair": 3.121,
+        "apply_render_A": 5.103,
+        "apply_render_B": 5.139,
+        "render_original": 4.995,
+        "evaluate": 7.333,
+        "export": 0.852
       },
-      "upload_to_review_s": 27.371,
+      "upload_to_review_s": 17.053,
       "model_tokens": {
         "nvidia/nemotron-3-super-120b-a12b:prompt": 837,
-        "nvidia/nemotron-3-super-120b-a12b:completion": 1310,
+        "nvidia/nemotron-3-super-120b-a12b:completion": 550,
         "zai-org/GLM-5.3-Flash:prompt": 7996,
-        "zai-org/GLM-5.3-Flash:completion": 1468
+        "zai-org/GLM-5.3-Flash:completion": 1628
       },
-      "model_cost_usd": 0.003363
+      "model_cost_usd": 0.002759
     },
     {
       "scene": "ual_walk_slide",
@@ -237,37 +237,37 @@
       },
       "jerk_rms_ratio": {
         "A": 1.427,
-        "B": 1.007
+        "B": 1.043
       },
       "foot_lock_error_cm": {
         "A": 0.0,
-        "B": 0.443
+        "B": 0.397
       },
       "collateral_max_cm": {
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "OK",
       "plan_source": "MODEL",
       "stage_s": {
-        "inspect": 0.536,
-        "extract_scope": 1.003,
-        "plan_repair": 5.508,
-        "apply_render_A": 3.955,
-        "apply_render_B": 3.977,
-        "render_original": 3.932,
-        "evaluate": 9.23,
-        "export": 0.759
+        "inspect": 0.643,
+        "extract_scope": 1.155,
+        "plan_repair": 5.372,
+        "apply_render_A": 5.67,
+        "apply_render_B": 5.671,
+        "render_original": 5.669,
+        "evaluate": 6.494,
+        "export": 0.992
       },
-      "upload_to_review_s": 20.344,
+      "upload_to_review_s": 19.466,
       "model_tokens": {
         "nvidia/nemotron-3-super-120b-a12b:prompt": 845,
-        "nvidia/nemotron-3-super-120b-a12b:completion": 989,
+        "nvidia/nemotron-3-super-120b-a12b:completion": 1167,
         "zai-org/GLM-5.3-Flash:prompt": 7996,
-        "zai-org/GLM-5.3-Flash:completion": 1099
+        "zai-org/GLM-5.3-Flash:completion": 1236
       },
-      "model_cost_usd": 0.002892
+      "model_cost_usd": 0.003121
     },
     {
       "scene": "foot_slide_v1",
@@ -298,20 +298,20 @@
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 1.764,
-        "extract_scope": 1.064,
-        "plan_repair": 0.001,
-        "apply_render_A": 15.793,
-        "apply_render_B": 15.795,
-        "render_original": 15.759,
+        "inspect": 2.391,
+        "extract_scope": 1.628,
+        "plan_repair": 0.002,
+        "apply_render_A": 24.469,
+        "apply_render_B": 24.39,
+        "render_original": 24.357,
         "evaluate": 0.001,
-        "export": 1.085
+        "export": 1.176
       },
-      "upload_to_review_s": 18.734,
+      "upload_to_review_s": 28.65,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -348,16 +348,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 1.023,
-        "extract_scope": 1.122,
-        "plan_repair": 0.001,
-        "apply_render_A": 15.888,
-        "apply_render_B": 15.908,
-        "render_original": 15.726,
+        "inspect": 1.143,
+        "extract_scope": 1.489,
+        "plan_repair": 0.002,
+        "apply_render_A": 20.37,
+        "apply_render_B": 20.379,
+        "render_original": 20.005,
         "evaluate": 0.001,
-        "export": 1.107
+        "export": 1.05
       },
-      "upload_to_review_s": 18.156,
+      "upload_to_review_s": 23.13,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -394,16 +394,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 0.973,
-        "extract_scope": 0.977,
-        "plan_repair": 0.001,
-        "apply_render_A": 15.785,
-        "apply_render_B": 15.841,
-        "render_original": 15.58,
+        "inspect": 0.974,
+        "extract_scope": 1.157,
+        "plan_repair": 0.002,
+        "apply_render_A": 19.086,
+        "apply_render_B": 19.016,
+        "render_original": 18.551,
         "evaluate": 0.001,
-        "export": 1.14
+        "export": 1.443
       },
-      "upload_to_review_s": 17.899,
+      "upload_to_review_s": 21.317,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -440,16 +440,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 0.945,
-        "extract_scope": 1.071,
+        "inspect": 1.032,
+        "extract_scope": 1.247,
         "plan_repair": 0.001,
-        "apply_render_A": 15.599,
-        "apply_render_B": 15.659,
-        "render_original": 15.493,
+        "apply_render_A": 19.824,
+        "apply_render_B": 20.051,
+        "render_original": 19.699,
         "evaluate": 0.001,
-        "export": 1.095
+        "export": 1.3
       },
-      "upload_to_review_s": 17.782,
+      "upload_to_review_s": 22.453,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -486,16 +486,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 1.176,
-        "extract_scope": 1.928,
+        "inspect": 1.377,
+        "extract_scope": 2.058,
         "plan_repair": 0.001,
-        "apply_render_A": 13.992,
-        "apply_render_B": 14.032,
-        "render_original": 13.986,
+        "apply_render_A": 14.092,
+        "apply_render_B": 14.185,
+        "render_original": 14.037,
         "evaluate": 0.0,
-        "export": 1.613
+        "export": 1.587
       },
-      "upload_to_review_s": 17.228,
+      "upload_to_review_s": 17.724,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -528,20 +528,20 @@
         "A": 0.0,
         "B": 0.0
       },
-      "recommended": "B",
+      "recommended": "A",
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 0.964,
-        "extract_scope": 1.252,
+        "inspect": 0.976,
+        "extract_scope": 1.152,
         "plan_repair": 0.001,
-        "apply_render_A": 23.901,
-        "apply_render_B": 23.666,
-        "render_original": 23.613,
+        "apply_render_A": 25.13,
+        "apply_render_B": 25.115,
+        "render_original": 25.14,
         "evaluate": 0.001,
-        "export": 0.998
+        "export": 2.128
       },
-      "upload_to_review_s": 26.218,
+      "upload_to_review_s": 27.722,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -578,16 +578,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 0.963,
-        "extract_scope": 1.051,
+        "inspect": 3.634,
+        "extract_scope": 3.659,
         "plan_repair": 0.001,
-        "apply_render_A": 23.92,
-        "apply_render_B": 24.278,
-        "render_original": 24.276,
+        "apply_render_A": 28.162,
+        "apply_render_B": 28.374,
+        "render_original": 28.067,
         "evaluate": 0.001,
-        "export": 1.02
+        "export": 1.298
       },
-      "upload_to_review_s": 26.398,
+      "upload_to_review_s": 35.775,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -624,16 +624,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 0.943,
-        "extract_scope": 1.199,
+        "inspect": 1.033,
+        "extract_scope": 1.249,
         "plan_repair": 0.001,
-        "apply_render_A": 24.135,
-        "apply_render_B": 24.002,
-        "render_original": 24.296,
-        "evaluate": 0.0,
-        "export": 1.016
+        "apply_render_A": 33.103,
+        "apply_render_B": 33.115,
+        "render_original": 33.196,
+        "evaluate": 0.001,
+        "export": 1.481
       },
-      "upload_to_review_s": 26.468,
+      "upload_to_review_s": 35.523,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -670,16 +670,16 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 1.008,
-        "extract_scope": 1.176,
-        "plan_repair": 0.001,
-        "apply_render_A": 24.553,
-        "apply_render_B": 24.803,
-        "render_original": 24.486,
-        "evaluate": 0.001,
-        "export": 1.061
+        "inspect": 1.179,
+        "extract_scope": 1.234,
+        "plan_repair": 0.002,
+        "apply_render_A": 25.154,
+        "apply_render_B": 25.216,
+        "render_original": 25.169,
+        "evaluate": 0.002,
+        "export": 1.027
       },
-      "upload_to_review_s": 27.072,
+      "upload_to_review_s": 27.737,
       "model_tokens": {},
       "model_cost_usd": null
     },
@@ -716,35 +716,35 @@
       "evaluator_status": "SKIPPED",
       "plan_source": "FALLBACK",
       "stage_s": {
-        "inspect": 1.19,
-        "extract_scope": 2.42,
+        "inspect": 1.164,
+        "extract_scope": 2.419,
         "plan_repair": 0.001,
-        "apply_render_A": 19.157,
-        "apply_render_B": 19.009,
-        "render_original": 19.129,
-        "evaluate": 0.001,
-        "export": 1.571
+        "apply_render_A": 19.618,
+        "apply_render_B": 19.574,
+        "render_original": 19.871,
+        "evaluate": 0.0,
+        "export": 1.767
       },
-      "upload_to_review_s": 22.84,
+      "upload_to_review_s": 23.492,
       "model_tokens": {},
       "model_cost_usd": null
     }
   ],
   "startup": {
     "host_blender_version_s": [
-      0.203,
-      0.123,
-      0.123
+      0.218,
+      0.127,
+      0.125
     ],
     "container_blender_version_s": [
-      0.55,
-      0.575,
-      0.602
+      0.568,
+      0.564,
+      0.675
     ],
-    "overhead_per_step_s": 0.452
+    "overhead_per_step_s": 0.441
   },
   "tests": {
-    "unit": 303,
+    "unit": 305,
     "contract": 53,
     "fault": 24,
     "golden": 13,
