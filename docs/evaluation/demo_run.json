@@ -1,7 +1,7 @@
 {
-  "finished": "2026-10-09 03:03:43",
+  "finished": "2026-10-12 16:22:23",
   "environment": {
-    "commit": "cd33daf",
+    "commit": "0c3f658",
     "dirty": true,
     "os": "Windows 11",
     "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
@@ -10,29 +10,29 @@
     "python": "3.12.12"
   },
   "provider": "token_factory",
-  "job_id": "job_01m4fqhnpx2wpfj3nakw1d3ep5",
+  "job_id": "job_01m4rwf2d4523c2njb448zae0z",
   "status": "COMPLETED",
   "latency_s": {
-    "upload_to_review": 48.462,
-    "inspect": 0.592,
-    "export": 0.606,
+    "upload_to_review": 21.053,
+    "inspect": 0.646,
+    "export": 0.602,
     "per_node": {
-      "validate_input": 0.001,
-      "extract_scope": 0.638,
-      "contact_analysis": 0.035,
+      "validate_input": 0.0,
+      "extract_scope": 0.661,
+      "contact_analysis": 0.04,
       "motion_analysis": 0.011,
-      "constraint_check": 0.011,
-      "defect_report": 0.002,
-      "plan_repair": 4.809,
-      "render_original": 4.207,
-      "generate_A": 0.03,
-      "generate_B": 0.051,
-      "apply_render_A": 4.3,
-      "apply_render_B": 4.301,
+      "constraint_check": 0.012,
+      "defect_report": 0.001,
+      "plan_repair": 6.122,
+      "render_original": 4.503,
+      "generate_A": 0.043,
+      "generate_B": 0.067,
+      "apply_render_A": 4.505,
+      "apply_render_B": 4.518,
       "metrics_A": 0.021,
-      "metrics_B": 0.015,
-      "evaluate": 37.98,
-      "apply_selected": 0.601
+      "metrics_B": 0.016,
+      "evaluate": 8.964,
+      "apply_selected": 0.598
     }
   },
   "defect": {
@@ -50,49 +50,57 @@
   "candidates": {
     "A": {
       "slip_before_cm": 10.002,
-      "slip_after_cm": 0.0,
-      "slip_reduction_pct": 100.0,
+      "slip_after_cm": 0.2,
+      "slip_reduction_pct": 98.0,
       "collateral_max_cm": 0.0,
       "outside_window_max_cm": 0.0,
-      "jerk_rms_ratio": 1.168
+      "jerk_rms_ratio": 1.215
     },
     "B": {
       "slip_before_cm": 10.002,
-      "slip_after_cm": 1.119,
-      "slip_reduction_pct": 88.81,
+      "slip_after_cm": 2.123,
+      "slip_reduction_pct": 78.78,
       "collateral_max_cm": 0.0,
       "outside_window_max_cm": 0.0,
-      "jerk_rms_ratio": 1.38
+      "jerk_rms_ratio": 1.054
     }
   },
   "model_calls": [
     {
-      "task": "evaluate",
-      "model": "zai-org/GLM-5.3-Flash",
-      "prompt_tokens": 4002,
-      "completion_tokens": 862,
-      "latency_ms": 11891
+      "task": "plan",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "prompt_tokens": 898,
+      "completion_tokens": 822
     },
     {
       "task": "evaluate",
       "model": "zai-org/GLM-5.3-Flash",
       "prompt_tokens": 4002,
-      "completion_tokens": 820,
-      "latency_ms": 37969
+      "completion_tokens": 800,
+      "latency_ms": 8953
+    },
+    {
+      "task": "evaluate",
+      "model": "zai-org/GLM-5.3-Flash",
+      "prompt_tokens": 4002,
+      "completion_tokens": 929,
+      "latency_ms": 8547
     }
   ],
   "recommended": "A",
   "decision": "A",
   "original_action_untouched": true,
+  "original_action_hash_checks": 8,
+  "model_cost_usd": 0.003074,
   "output": {
-    "artifact_id": "art_01m4fqk51gaqt5a6w5mzpsbq7q",
+    "artifact_id": "art_01m4rwfpxc22ezhtkxwzkk57n6",
     "kind": "OUTPUT_BLEND",
     "media_type": "application/octet-stream",
-    "sha256": "49c238409c248f9f06ed7a10a855ab183ef443352fd916ab66f3580a03cb96a0",
+    "sha256": "8454ed8f981a0a99b5adda52b270e1b0695e185ad26de692a3df8f9eac3bc951",
     "size_bytes": 1478976,
     "frame_count": null,
     "first_frame": null,
     "frame_step": null,
-    "uri": "/v1/artifacts/art_01m4fqk51gaqt5a6w5mzpsbq7q"
+    "uri": "/v1/artifacts/art_01m4rwfpxc22ezhtkxwzkk57n6"
   }
 }

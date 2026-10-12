@@ -1,6 +1,6 @@
 # Phase 7: evaluation and hardening
 
-Status: **in progress** (2026-10-12).
+Status: **complete (2026-10-12).** All 14 steps of the [MVP definition of done](PRODUCT.md#definition-of-mvp-done) have evidence below. The only item not done is outside Phase 7: live Nebius Serverless Jobs runs (Phase 6), which wait on the owner's Nebius account.
 
 Phase 7 had two halves in the original plan: the workflow evaluation ([METRICS §3](METRICS.md#3-workflow-evaluation-protocol-to-be-run-in-phase-7)) and the hardening items carried forward from [PHASE3.md](PHASE3.md).
 
@@ -33,6 +33,27 @@ With prompt `planner/2`, Nemotron chose 2-frame blends for candidate A. The plan
 | Streaming uploads: the multipart body is parsed as it arrives, so an oversized upload is cut off at the cap instead of being spooled to disk first. Over real HTTP, a 50 MB chunked upload against a 5 MB cap got 413 after about 6 MB | done |
 | Branch protection: PRs, five required checks, squash only | done (ruleset active 2026-10-12) |
 
-## Open
+## Definition of done: evidence
+
+The demo row values come from `uv run task demo` on 2026-10-12, commit `0c3f658`, recorded in [`evaluation/demo_run.json`](evaluation/demo_run.json). It used the canonical fixture, host Blender 4.5.14, and Token Factory.
+
+| # | Step | Evidence |
+|---|---|---|
+| 1 | Open the canonical fixture | `blender/fixtures/foot_slide_v1.blend`, built by `uv run task fixture` |
+| 2 | Select the left leg and the slide frames | demo selection: `foot.L`, frames 45-90 |
+| 3 | Measure the defect (about 10 cm) | demo: 10.00 cm on frames 39-91, MAJOR |
+| 4 | Submit the repair | demo: the job is created through `JobService.create_job`, the call behind `POST /v1/jobs`, and ends `COMPLETED` |
+| 5 | A and B run concurrently | `tests/fault/test_fault_injection.py::test_candidates_run_concurrently`, `tests/unit/test_engine.py::test_independent_nodes_run_concurrently` |
+| 6 | The original animation stays byte-for-byte unchanged | demo: the original action's F-curve hash is identical at 8 checkpoints (extract, before and after each candidate, export); `test_blender_worker.py::test_original_action_fcurves_hash_unchanged` |
+| 7 | Previews and deterministic metrics for both | demo: both candidates rendered and scored; golden tests (`tests/golden`) |
+| 8 | At least one candidate removes ≥ 80% of the slide | demo: A 98.0% (10.00 → 0.20 cm), B 78.8%; benchmark: A 0.00 cm in 5/5 scenes ([BENCHMARKS.md](BENCHMARKS.md)) |
+| 9 | Models evaluate through Token Factory | demo: Nemotron 3 Super plan (898 prompt + 822 completion tokens) and two GLM-5.3-Flash visual reviews; $0.0031 in all. The vision model is not Nemotron: see the note on step 9 in PRODUCT.md |
+| 10 | The Kotlin client shows Original / A / B | [PHASE5.md](PHASE5.md), screenshot `docs/img/review-client.png`; 17 Kotlin tests pass |
+| 11 | The user selects a result | demo: decision A (the recommendation); `POST /v1/jobs/{id}/decision` tests in `tests/integration/test_api_jobs.py` |
+| 12 | Applied non-destructively as an NLA layer in an output `.blend` | demo: `OUTPUT_BLEND` artifact (1.48 MB); `test_blender_worker.py::test_export_writes_output_blend_with_selected_track` |
+| 13 | Metrics and logs show latency, model usage, improvement and collateral | demo: upload to review 21.1 s with per-node times, token counts, slip before/after, collateral 0.0000 cm; Prometheus names in [METRICS.md](METRICS.md) |
+| 14 | The automated suite passes | 2026-10-12, locally: 428 offline, 14 Blender, 1 container parity and 17 Kotlin tests pass; CI green on PRs #5-#9 with the five required checks |
+
+## Open (outside Phase 7)
 
 - **Nebius Serverless Jobs live runs** wait on the owner's Nebius AI Cloud account ([PHASE6.md](PHASE6.md)).

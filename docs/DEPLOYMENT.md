@@ -55,8 +55,8 @@ All workflows live in [`.github/workflows/`](../.github/workflows/). **No workfl
 
 | Workflow | Trigger | Jobs | Required to merge |
 |---|---|---|---|
-| `ci.yml` | push, pull_request | `python` (format, lint, mypy strict, pytest with a Redis service), `openapi-drift`, `kotlin` (build + test, JDK 17), `docker` (build backend image) | **yes**, all four |
-| `blender.yml` | changes under `blender/**`, `backend/src/kinesis/{analysis,repair,evaluation,schemas}/**`, `tests/integration/**`, `tests/golden/**`; nightly 03:00 UTC; manual | downloads (cached) Blender 4.5.14, runs `pytest -m blender` | not yet. It becomes required once spike S3 shows headless rendering is reliable on hosted runners |
+| `ci.yml` | push, pull_request | `python` (format, lint, mypy strict, pytest with a Redis service), `openapi-drift`, `kotlin` (build + test, JDK 17), `docker` (build backend image) | **yes**, all four (ruleset on `main`) |
+| `blender.yml` | every push and pull request; nightly 03:00 UTC; manual | `changes` (path filter: `blender/**`, `backend/src/kinesis/{analysis,repair,evaluation,schemas}/**`, `tests/integration/**`, `tests/golden/**`); `blender` (cached Blender 4.5.14, `pytest -m blender`) when those paths change; `blender-gate`, which always runs and passes when `blender` passed or was skipped; `container` parity (nightly and manual only; opens an issue on failure) | **`blender-gate` yes** (since 2026-10-12); `container` no |
 | `live-nebius.yml` | `workflow_dispatch` only | `pytest -m live_nebius` with the `NEBIUS_API_KEY` secret | never |
 
 **Why Blender is not in `ci.yml`.** The Blender tarball is about 350 MB. It is cached, but cold runs still add minutes. Headless rendering on GPU-less runners has to be proven first (spike S3). Every Blender-independent guarantee is still enforced on every push through the numpy mirror.

@@ -48,6 +48,8 @@ A `contextvars.ContextVar` carries `job_id`, `node`, `candidate_id` and `attempt
 
 ## 3. Workflow evaluation protocol (to be run in Phase 7)
 
+> **Not run.** The owner dropped the formal study on 2026-10-09. The scene suite of step 1 exists ([BENCHMARKS.md](BENCHMARKS.md)); steps 2-7 were not carried out, so Kinesis makes no productivity claim.
+
 The productivity claim rests on this protocol. Until it has been run, the README and portfolio materials claim only measured *objective* improvements, such as "slip reduced from 10.0 cm to 0.3 cm".
 
 1. **Scenes.** Use the canonical fixture plus 2–3 variants: a different slide magnitude and direction, a right foot, and a longer contact. Use 1 externally sourced, CC-licensed walk cycle with a hand-introduced slide.
@@ -66,4 +68,4 @@ Step 13 of the definition of done is satisfied by one reproducible run that reco
 - the slip before and after for A and B;
 - `collateral_max_cm`.
 
-A Phase 7 script exports that run as `docs/evaluation/demo_run.json`.
+`uv run task demo` (`scripts/demo.py`) exports that run as [`docs/evaluation/demo_run.json`](evaluation/demo_run.json).
