@@ -16,8 +16,10 @@ import hashlib
 import logging
 import random
 import shutil
+import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +31,7 @@ from kinesis.jobs.specs import export_spec
 from kinesis.jobs.stats import compute_product_stats
 from kinesis.jobs.worker_io import run_worker, spec_paths
 from kinesis.observability.context import bind
-from kinesis.observability.metrics import CANDIDATES, JOB_DURATION, NODE_DURATION
+from kinesis.observability.metrics import CANDIDATES, JOB_DURATION, NODE_DURATION, SWEPT
 from kinesis.orchestration.breaker import CircuitBreaker
 from kinesis.orchestration.cache import Cache
 from kinesis.orchestration.dag import Node, NodeStatus, RetryPolicy
@@ -96,6 +98,12 @@ class ServiceConfig:
     @property
     def scenes_root(self) -> Path:
         return self.data_dir / "scenes"
+
+
+@dataclass(frozen=True, slots=True)
+class SweepReport:
+    jobs: int
+    scenes: int
 
 
 class JobService:
@@ -215,6 +223,8 @@ class JobService:
         ).hexdigest()
         sel = body.selection
         scene = await self.get_scene(sel.scene_id)
+        if not (self.scene_dir(scene.scene_id) / "input" / "scene.blend").is_file():
+            raise not_found(ErrorCode.SCENE_NOT_FOUND, "scene")  # removed by the sweeper
         if body.repair_type not in SUPPORTED_REPAIR_TYPES:
             raise RequestError(422, ErrorCode.UNSUPPORTED_REPAIR_TYPE, "Unsupported repair type")
         armature = next((a for a in scene.armatures if a.name == sel.armature), None)
@@ -271,6 +281,46 @@ class JobService:
                 del self._tasks[job_id]
 
         task.add_done_callback(forget)
+
+    # ------------------------------------------------------------ retention
+
+    async def sweep(self, retention_s: float) -> SweepReport:
+        """Delete workspaces older than ``retention_s`` (ARCHITECTURE §8: default 7 days).
+
+        - job directories of **finished** jobs (terminal status, last update before the cutoff).
+          The job record, its events and the decision stay, so history and product stats
+          survive; its artifact links return 404 afterwards. Jobs that are running or awaiting
+          a decision are never touched, however old;
+        - the files of uploaded scenes older than the cutoff. Jobs work on their own copy and
+          keep the scene's metadata row, so this never affects a job; a new job on that scene
+          gets ``SCENE_NOT_FOUND``;
+        - scene directories without a row (an upload that crashed), by modification time.
+        """
+        cutoff = now() - timedelta(seconds=retention_s)
+        jobs = 0
+        for job_id in await self.store.finished_jobs_before(cutoff):
+            if job_id not in self._tasks and await self.artifacts.remove_job_files(job_id):
+                jobs += 1
+        scenes = 0
+        for scene_id in await self.store.scenes_before(cutoff):
+            path = self.scene_dir(scene_id)
+            if path.exists():
+                await asyncio.to_thread(shutil.rmtree, path, True)
+                scenes += 1
+        root = self.config.scenes_root
+        if root.exists():
+            known_cutoff = time.time() - retention_s
+            for path in root.iterdir():
+                if (
+                    path.is_dir()
+                    and path.stat().st_mtime < known_cutoff
+                    and await self.store.get_scene(path.name) is None
+                ):
+                    await asyncio.to_thread(shutil.rmtree, path, True)
+                    scenes += 1
+        SWEPT.labels(kind="job").inc(jobs)
+        SWEPT.labels(kind="scene").inc(scenes)
+        return SweepReport(jobs=jobs, scenes=scenes)
 
     async def wait_idle(self) -> None:
         """Wait for every background job task (tests and graceful shutdown)."""

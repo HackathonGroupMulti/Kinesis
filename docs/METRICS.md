@@ -34,6 +34,7 @@ Kinesis succeeds only if it **improves a workflow**. No productivity claim is ma
 | `kinesis_retries_total` | counter | `node` |
 | `kinesis_candidates_total` | counter | `status` |
 | `kinesis_plan_source_total` | counter | `source` (MODEL/FALLBACK) |
+| `kinesis_swept_total` | counter | `kind` (job/scene): workspaces deleted by the retention sweeper |
 
 **Structured logs** are JSON lines. Every record carries these fields where they apply:
 - job and node context: `job_id`, `node`, `candidate_id`, `attempt`, `elapsed_ms`;

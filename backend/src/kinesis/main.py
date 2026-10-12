@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -19,6 +21,19 @@ from kinesis.settings import get_settings
 log = logging.getLogger("kinesis.api")
 
 
+async def run_sweeper(service: JobService, retention_s: float, interval_s: float) -> None:
+    """Run the retention sweep now and then every ``interval_s``. A failed sweep is logged and
+    retried on the next tick; it never takes the API down."""
+    while True:
+        try:
+            report = await service.sweep(retention_s)
+            if report.jobs or report.scenes:
+                log.info("retention.swept", extra={"jobs": report.jobs, "scenes": report.scenes})
+        except Exception:
+            log.exception("retention.sweep_failed")
+        await asyncio.sleep(interval_s)
+
+
 def create_app(service: JobService | None = None) -> FastAPI:
     """Build the app. Tests pass a ``service`` (fake runner, temp storage); otherwise one is
     built from settings on first use, so importing the app never touches the disk."""
@@ -31,7 +46,21 @@ def create_app(service: JobService | None = None) -> FastAPI:
         recovered = await svc.recover()
         if recovered:
             log.warning("jobs.recovered_after_restart", extra={"count": recovered})
-        yield
+        settings = get_settings()
+        sweeper = None
+        if settings.kinesis_retention_days > 0:
+            sweeper = asyncio.create_task(
+                run_sweeper(
+                    svc, settings.kinesis_retention_days * 86400, settings.kinesis_sweep_interval_s
+                )
+            )
+        try:
+            yield
+        finally:
+            if sweeper is not None:
+                sweeper.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await sweeper
 
     app = FastAPI(
         title="Kinesis API",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
@@ -71,6 +72,10 @@ class JobStore(Protocol):
 
     async def list_decisions(self) -> Sequence[HumanDecision]: ...
 
+    async def finished_jobs_before(self, cutoff: datetime) -> list[str]: ...
+
+    async def scenes_before(self, cutoff: datetime) -> list[str]: ...
+
 
 @runtime_checkable
 class ArtifactStore(Protocol):
@@ -94,4 +99,4 @@ class ArtifactStore(Protocol):
 
     async def resolve(self, artifact_id: str, frame: int | None = None) -> Path: ...
 
-    async def sweep(self, older_than_s: float) -> int: ...
+    async def remove_job_files(self, job_id: str) -> bool: ...

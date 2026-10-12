@@ -60,6 +60,7 @@ CACHE_REQUESTS = Counter("kinesis_cache_requests_total", "Cache lookups", ["name
 RETRIES = Counter("kinesis_retries_total", "Node and call retries", ["node"])
 CANDIDATES = Counter("kinesis_candidates_total", "Finished candidates", ["status"])
 PLAN_SOURCE = Counter("kinesis_plan_source_total", "Executed plans by source", ["source"])
+SWEPT = Counter("kinesis_swept_total", "Workspaces deleted by the retention sweeper", ["kind"])
 
 
 def provider_error_outcome(exc: BaseException) -> str:
