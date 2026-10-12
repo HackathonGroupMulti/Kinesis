@@ -335,7 +335,7 @@ async def test_happy_path_records_everything(make_service: Any) -> None:
     assert {a.kind.value for a in job.original_artifacts} == {"PREVIEW_FRAMES", "CONTEXT_FRAMES"}
     assert job.evaluation is not None
     assert job.evaluation.evaluator_status is EvaluatorStatus.OK
-    assert job.evaluation.recommended is CandidateLabel.B  # objective ranking (PHASE2.md)
+    assert job.evaluation.recommended is CandidateLabel.A  # B leaves 1.2 cm (acceptance line)
     seqs = [e.seq for e in await events(service, job)]
     assert seqs == list(range(1, len(seqs) + 1))
 

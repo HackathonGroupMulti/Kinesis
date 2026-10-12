@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from benchlib import ROOT, SceneRun, environment, make_service, run_scene, write_json
 from prometheus_client import REGISTRY
 
+from kinesis.evaluation.metrics import ACCEPTANCE_SLIP_CM
 from kinesis.jobs.container import ContainerJobRunner
 from kinesis.jobs.local import LocalJobRunner
 from kinesis.jobs.runner import JobRunner
@@ -50,7 +51,7 @@ STAGES = (
     "render_original",
     "evaluate",
 )
-ACCEPT_CM = 1.0
+ACCEPT_CM = ACCEPTANCE_SLIP_CM
 UAL_GLB = Path(
     os.environ.get("KINESIS_UAL_GLB")
     or ROOT

@@ -534,7 +534,7 @@ async def test_full_job_through_api_with_real_blender(tmp_path: Path) -> None:
         by_label = {c["label"]: c for c in job["candidates"]}
         assert by_label["A"]["metrics"]["slip_reduction_pct"] >= 95
         assert by_label["B"]["metrics"]["slip_reduction_pct"] >= 70
-        assert job["evaluation"]["recommended"] == "B"
+        assert job["evaluation"]["recommended"] == "A"
         frames = next(a for a in job["original_artifacts"] if a["kind"] == "PREVIEW_FRAMES")
         jpeg = await client.get(f"{frames['uri']}?frame=0")
         assert jpeg.content.startswith(b"\xff\xd8")

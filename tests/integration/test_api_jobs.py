@@ -122,7 +122,7 @@ async def test_post_job_202_then_poll_to_awaiting_decision(api: Api) -> None:
     defect = (await api.client.get(f"/v1/jobs/{job['job_id']}/defect")).json()
     assert defect["severity"] == "MAJOR"
     evaluation = (await api.client.get(f"/v1/jobs/{job['job_id']}/evaluation")).json()
-    assert evaluation["recommended"] == "B"
+    assert evaluation["recommended"] == "A"  # B leaves 1.2 cm, over the acceptance line
     assert evaluation["evaluator_status"] == "OK"
 
 
@@ -161,8 +161,8 @@ async def test_post_decision_a_moves_to_applying_then_completed(api: Api) -> Non
     done = (await api.client.get(f"/v1/jobs/{job['job_id']}")).json()
     assert done["status"] == "COMPLETED"
     assert done["decision"]["choice"] == "A"
-    assert done["decision"]["model_recommended"] == "B"
-    assert done["decision"]["agreed"] is False
+    assert done["decision"]["model_recommended"] == "A"
+    assert done["decision"]["agreed"] is True
     output = await api.client.get(done["output"]["uri"])
     assert output.status_code == 200
     assert output.content == b"BLENDER-fake-export"
@@ -331,14 +331,16 @@ async def test_job_list_and_product_stats(api: Api) -> None:
     older = (await api.client.get(f"/v1/jobs?before={second['job_id']}")).json()
     assert [j["job_id"] for j in older] == [first["job_id"]]
     await api.client.post(
-        f"/v1/jobs/{first['job_id']}/decision", json={"choice": "B", "time_to_decision_s": 20}
+        f"/v1/jobs/{first['job_id']}/decision", json={"choice": "A", "time_to_decision_s": 20}
     )
     await api.service.wait_idle()
     stats = (await api.client.get("/v1/stats/product")).json()
     assert stats["jobs_total"] == 2
     assert stats["jobs_decided"] == 1
     assert stats["candidate_acceptance_rate"] == 1.0
-    assert stats["model_human_agreement_rate"] == 1.0  # the objective+visual pick was B
+    assert (
+        stats["model_human_agreement_rate"] == 1.0
+    )  # the pick was A (B is over the acceptance line)
     assert stats["median_slip_reduction_pct"] > 80
     assert stats["median_time_to_decision_s"] == 20
     assert stats["cost_per_accepted_repair_usd"] is None  # the mock provider has no prices

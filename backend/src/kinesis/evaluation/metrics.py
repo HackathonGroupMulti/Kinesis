@@ -31,6 +31,8 @@ GATES = {
     "penetration_max_cm": 0.5,
 }
 SCORING_WEIGHTS = {"slip": 0.55, "jerk": 0.20, "deviation": 0.15, "contact": 0.10}
+ACCEPTANCE_SLIP_CM = 1.0
+"""A repair is acceptable when the planted slip left after it is below this (METRICS.md)."""
 
 
 @dataclass(frozen=True)
@@ -231,6 +233,7 @@ def rank_candidates(
 
 
 __all__ = [
+    "ACCEPTANCE_SLIP_CM",
     "GATES",
     "SCORING_WEIGHTS",
     "MetricContext",
