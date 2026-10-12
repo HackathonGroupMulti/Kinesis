@@ -65,6 +65,8 @@ uv run task setup-blender  # optional: portable Blender 4.5 LTS into .tools/
 docker compose up          # optional: API + Redis in containers
 ```
 
+**From Blender:** `uv run task addon` writes `dist/kinesis_addon.zip`. Install it in Blender 4.5 (Edit > Preferences > Add-ons > Install from Disk) with `uv run task run` serving the API. Then select the foot bone in pose mode, set the preview range, and press **Measure & Repair** in View3D > Sidebar > Kinesis. Choose A or B in the review client (`uv run task client`), and **Import Selected Repair** adds it to your open file as a `Kinesis:<label>` NLA track. Mute that track to compare with the original.
+
 Run `uv run task --help` to list every task. Normal development and the full test suite never require Nebius credentials.
 
 ## License

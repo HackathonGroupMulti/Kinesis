@@ -1,21 +1,20 @@
-"""Kinesis Blender add-on (stub).
+"""Kinesis Blender add-on: View3D > Sidebar > Kinesis.
 
-The panel is planned for Phase 5/7:
-- pick the armature, the target bones (from the pose-mode selection) and the frame range
-  (from the timeline preview range or markers);
-- pick the contact object (the floor by default) and write an optional instruction;
-- "Measure & Repair" saves a copy of the .blend, POSTs it to /v1/scenes and then /v1/jobs,
-  and opens the review client;
-- "Import Selected Repair" links the chosen candidate Action from the output .blend and adds
-  it as an NLA track. It never edits the active action.
+- **Measure & Repair** saves a copy of the open file, uploads it to the Kinesis server and
+  starts a repair of the selected foot bone over the preview range (or the scene range). The
+  panel follows the job; the animator compares Original / A / B in the review client.
+- **Import Selected Repair** downloads the exported repair and adds the chosen candidate as a
+  ``Kinesis:<label>`` NLA track above the original (``nla.py``). It never edits the active
+  action.
 
-The add-on does no repair math and makes no AI calls (ADR 0003).
+The add-on does no repair math and makes no AI calls (ADR 0003). ``client.py`` is standard
+library only, so it also runs (and is tested) outside Blender.
 """
 
 bl_info = {
     "name": "Kinesis",
     "author": "Kinesis contributors",
-    "version": (0, 1, 0),
+    "version": (0, 2, 0),
     "blender": (4, 5, 0),
     "location": "View3D > Sidebar > Kinesis",
     "description": "Localized animation repair: measure, propose, compare, apply",
@@ -24,8 +23,12 @@ bl_info = {
 
 
 def register() -> None:
-    pass
+    from . import ui
+
+    ui.register()
 
 
 def unregister() -> None:
-    pass
+    from . import ui
+
+    ui.unregister()

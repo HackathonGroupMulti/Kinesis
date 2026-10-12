@@ -54,6 +54,18 @@ The demo row values come from `uv run task demo` on 2026-10-12, commit `0c3f658`
 | 13 | Metrics and logs show latency, model usage, improvement and collateral | demo: upload to review 21.1 s with per-node times, token counts, slip before/after, collateral 0.0000 cm; Prometheus names in [METRICS.md](METRICS.md) |
 | 14 | The automated suite passes | 2026-10-12, locally: 428 offline, 14 Blender, 1 container parity and 17 Kotlin tests pass; CI green on PRs #5-#9 with the five required checks |
 
+## After the wrap-up: the Blender add-on (concern C4)
+
+The add-on was a stub. Since 2026-10-12 it works end to end from the animator's open file:
+
+- **Measure & Repair** saves a copy of the file and uploads it. It starts a job for the foot bones selected in pose mode, over the preview range. A standard-library HTTP client on a worker thread keeps Blender's UI responsive, and a timer follows the job.
+- **Import Selected Repair** downloads the exported repair. It appends the chosen candidate's Action and layers it exactly as the worker does: the original goes to a bottom `Kinesis:Original` strip and the candidate goes on a `Kinesis:<label>` track. The animator's Action is never edited.
+- **Tests:**
+  - the client runs against the real API served by uvicorn (5 tests);
+  - the NLA import runs in headless Blender. The open file evaluates to the candidate, muting the track restores the original to within 1e-6 m, and a second import is refused;
+  - a full headless-Blender run against a real server goes from submit, through the decision via the API, to the import.
+- `uv run task addon` packages `dist/kinesis_addon.zip`. Installing it through Blender's add-on installer was checked in a throwaway Blender profile.
+
 ## Open (outside Phase 7)
 
 - **Nebius Serverless Jobs live runs** wait on the owner's Nebius AI Cloud account ([PHASE6.md](PHASE6.md)).
