@@ -7,6 +7,7 @@ import contextlib
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -14,6 +15,7 @@ from kinesis import __version__
 from kinesis.api import routes_artifacts, routes_health, routes_jobs, routes_scenes
 from kinesis.api.deps import ensure_service, verify_provider
 from kinesis.api.errors import install_error_handlers
+from kinesis.api.upload import BODY_SCHEMA, BODY_SCHEMA_NAME
 from kinesis.jobs.service import JobService
 from kinesis.observability.context import configure_logging
 from kinesis.settings import get_settings
@@ -79,5 +81,20 @@ def create_app(service: JobService | None = None) -> FastAPI:
     install_error_handlers(app)
     for module in (routes_scenes, routes_jobs, routes_artifacts, routes_health):
         app.include_router(module.router)
+
+    default_openapi = app.openapi
+
+    def openapi() -> dict[str, Any]:
+        """The streamed upload route declares its body by reference; register the schema."""
+        if app.openapi_schema is None:
+            schema = default_openapi()
+            schema.setdefault("components", {}).setdefault("schemas", {})[BODY_SCHEMA_NAME] = (
+                BODY_SCHEMA
+            )
+            schemas = schema["components"]["schemas"]
+            schema["components"]["schemas"] = dict(sorted(schemas.items()))
+        return app.openapi_schema or schema
+
+    app.openapi = openapi  # type: ignore[method-assign]
 
     return app

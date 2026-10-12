@@ -344,3 +344,51 @@ async def test_job_list_and_product_stats(api: Api) -> None:
     assert stats["median_slip_reduction_pct"] > 80
     assert stats["median_time_to_decision_s"] == 20
     assert stats["cost_per_accepted_repair_usd"] is None  # the mock provider has no prices
+
+
+async def test_upload_streams_and_stops_reading_an_oversized_body(api_factory: Any) -> None:
+    """The size cap fires while the body arrives, not after it has been spooled to disk."""
+    api = await api_factory(max_upload_bytes=1024)
+    boundary = "kinesis-test-boundary"
+    sent = 0
+
+    async def body() -> AsyncIterator[bytes]:
+        nonlocal sent
+        head = (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="a.blend"\r\n'
+            "Content-Type: application/octet-stream\r\n\r\n"
+        ).encode()
+        for piece in (head, FAKE_BLEND, *(b"\0" * 65536 for _ in range(160))):  # ~10 MB
+            sent += len(piece)
+            yield piece
+        yield f"\r\n--{boundary}--\r\n".encode()
+
+    r = await api.client.post(
+        "/v1/scenes",
+        content=body(),
+        headers={"content-type": f"multipart/form-data; boundary={boundary}"},
+    )
+    assert_problem(r, 413, "FILE_TOO_LARGE")
+    assert sent < 1 << 20  # stopped after about one chunk, not 10 MB
+    assert not any(api.service.config.scenes_root.iterdir())  # nothing left behind
+
+
+async def test_upload_refuses_a_declared_oversized_body_up_front(api_factory: Any) -> None:
+    api = await api_factory(max_upload_bytes=1024)
+    r = await api.client.post(
+        "/v1/scenes",
+        content=b"x",
+        headers={"content-type": "multipart/form-data; boundary=b", "content-length": "99999999"},
+    )
+    assert_problem(r, 413, "FILE_TOO_LARGE")
+
+
+async def test_upload_needs_a_multipart_file_field(api: Api) -> None:
+    r = await api.client.post("/v1/scenes", files={"other": ("a.blend", FAKE_BLEND)})
+    assert_problem(r, 422, "VALIDATION_ERROR")
+    r = await api.client.post("/v1/scenes", content=FAKE_BLEND)
+    assert_problem(r, 422, "VALIDATION_ERROR")
+    both = await api.client.post(
+        "/v1/scenes", files={"note": ("n.txt", b"hello"), "file": ("a.blend", FAKE_BLEND)}
+    )
+    assert both.status_code == 201, both.text  # other fields are ignored

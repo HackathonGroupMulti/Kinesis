@@ -50,7 +50,7 @@ When nothing slides (severity NONE), `defect_report` raises `SkipNode`. The job 
 6. **One lock per job for the aggregate.** Concurrent candidate branches update `RepairJob` through `JobContext.mutate`. Status and `last_event_seq` live in their own SQLite columns, so a stale `save_job` cannot roll them back.
 7. **SQLite runs with `synchronous=NORMAL`** (WAL). A crash cannot corrupt the database, but the last few commits can be lost on power failure. FULL fsync'd every event append.
 8. **Cancellation kills Blender.** `LocalJobRunner` now kills the subprocess when its task is cancelled, not only on timeout.
-9. **Uploads are spooled by Starlette before the copy.** The size cap and magic check run while Kinesis copies the upload into the scene directory. True request-body streaming is a hardening item for Phase 7.
+9. **Uploads are spooled by Starlette before the copy.** The size cap and magic check run while Kinesis copies the upload into the scene directory. True request-body streaming is a hardening item for Phase 7. *(Done 2026-10-12: `api/upload.py` parses the multipart body as it arrives.)*
 10. **`KINESIS_PROVIDER=token_factory` falls back to the null provider** until Phase 4, with a warning.
 11. **Two error-code choices** that API.md left open: choosing a FAILED candidate returns `422 VALIDATION_ERROR`, and a scene that fails inspection returns `422 FILE_INVALID`.
 
@@ -63,4 +63,4 @@ When nothing slides (severity NONE), `defect_report` raises `SkipNode`. The job 
 
 - **Phase 4:** implement `TokenFactoryProvider` and plug it into the existing provider seam and breakers. Turn on `/v1/health/providers` and the transport replay tests.
 - **Phase 5:** the Compose client consumes the routes as they are now, including `original_artifacts` for the A/B view. Add `/v1/stats/product`.
-- **Phase 7:** true streaming uploads, and per-job workspace cleanup with the TTL sweeper on a schedule.
+- **Phase 7:** true streaming uploads, and per-job workspace cleanup with the TTL sweeper on a schedule. *(Both done 2026-10-12; see [PHASE7.md](PHASE7.md).)*

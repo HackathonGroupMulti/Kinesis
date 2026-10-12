@@ -26,6 +26,8 @@ The upload request is `multipart/form-data` with one field, `file`. Upload rules
 - The size limit is `KINESIS_MAX_UPLOAD_MB` (default 200).
 - The file must start with the bytes `BLENDER`.
 - The client filename is ignored.
+- The body is streamed, not spooled: a `Content-Length` over the limit is refused before any of the body is read, and a chunked upload is cut off with 413 as soon as it crosses the limit (a 50 MB upload against a 5 MB cap was refused after about 6 MB, 2026-10-12).
+- A body that is not `multipart/form-data`, or has no `file` field, gets 422 `VALIDATION_ERROR`. Other form fields are ignored.
 
 The server inspects the scene headlessly (armatures, bones, frame range, fps) before responding. Job requests are validated against that inventory.
 
