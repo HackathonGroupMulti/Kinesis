@@ -294,6 +294,25 @@ def fixture(_: list[str]) -> int:
     )
 
 
+@task(
+    "addon",
+    "Package the Blender add-on as dist/kinesis_addon.zip (Edit > Preferences > Add-ons > Install)",
+)
+def addon(_: list[str]) -> int:
+    import zipfile
+
+    src = ROOT / "blender" / "addon" / "kinesis_addon"
+    out = ROOT / "dist" / "kinesis_addon.zip"
+    out.parent.mkdir(exist_ok=True)
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for path in sorted(src.rglob("*.py")):
+            z.write(path, path.relative_to(src.parent).as_posix())
+    print(
+        f"wrote {out.relative_to(ROOT)}: install it in Blender 4.5, then View3D > Sidebar > Kinesis"
+    )
+    return 0
+
+
 @task("ual-scene", "Build var/bench/scenes/ual_walk_slide.blend from the Quaternius UAL zip")
 def ual_scene(args: list[str]) -> int:
     """``uv run task ual-scene -- --zip "<...>/Universal Animation Library[Standard].zip"``.

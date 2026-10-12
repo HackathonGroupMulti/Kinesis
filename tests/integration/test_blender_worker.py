@@ -546,3 +546,101 @@ async def test_full_job_through_api_with_real_blender(tmp_path: Path) -> None:
         assert done["status"] == "COMPLETED", done.get("error")
         output = await client.get(done["output"]["uri"])
         assert output.content.startswith(b"BLENDER")
+
+
+# ------------------------------------------------------------------ add-on (concern C4)
+
+ADDON_SCRIPT = """
+import bpy, hashlib, json, sys
+argv = sys.argv[sys.argv.index("--") + 1:]
+addon_dir, output, action, track = argv
+sys.path.insert(0, addon_dir)
+import kinesis_addon
+from kinesis_addon import nla
+kinesis_addon.register()
+out = {"operators": [hasattr(bpy.ops.kinesis, n) for n in ("submit", "import_repair")],
+       "panel": hasattr(bpy.types, "KINESIS_PT_panel")}
+rig = bpy.data.objects["Rig"]
+original = rig.animation_data.action
+
+def digest(a):
+    h = hashlib.sha256()
+    for layer in a.layers:
+        for strip in layer.strips:
+            for bag in strip.channelbags:
+                for fc in sorted(bag.fcurves, key=lambda c: (c.data_path, c.array_index)):
+                    h.update(f"{fc.data_path}{fc.array_index}".encode())
+                    for kp in fc.keyframe_points:
+                        h.update(f"{kp.co[0]:.6f}{kp.co[1]:.9f}".encode())
+    return h.hexdigest()
+
+before = digest(original)
+nla.import_repair(rig, __import__("pathlib").Path(output), action, track)
+out["original_unchanged"] = digest(original) == before
+ad = rig.animation_data
+out["active_action"] = ad.action.name if ad.action else None
+out["tracks"] = [t.name for t in ad.nla_tracks]
+sc = bpy.context.scene
+def foot():
+    pts = []
+    for f in range(sc.frame_start, sc.frame_end + 1):
+        sc.frame_set(f)
+        pts.append(list(rig.matrix_world @ rig.pose.bones["foot.L"].head))
+    return pts
+out["foot"] = foot()
+ad.nla_tracks[track].mute = True
+out["muted_foot"] = foot()
+ad.nla_tracks[track].mute = False
+try:
+    nla.import_repair(rig, __import__("pathlib").Path(output), action, track)
+    out["second_import"] = "accepted"
+except nla.ImportFailed as exc:
+    out["second_import"] = str(exc)
+kinesis_addon.unregister()
+out["unregistered"] = not hasattr(bpy.types, "KINESIS_PT_panel")
+print("ADDON" + json.dumps(out))
+"""
+
+
+def test_addon_imports_the_chosen_repair_into_a_live_session(
+    phase2: dict[CandidateLabel, AppliedCandidate],
+    extracted: ExtractResult,
+    tmp_path: Path,
+) -> None:
+    """The animator's open file (the fixture) gets the exported A as a Kinesis NLA layer that
+    evaluates to the candidate, and muting it restores the original exactly."""
+    c = phase2[CandidateLabel.A]
+    node, spec = export_spec("foot_slide_v1", "Rig", CandidateLabel.A, c.candidate_id)
+    runner = LocalJobRunner(_blender())
+    result = asyncio.run(
+        run_worker(runner, c.job_dir, node, WorkerCommand.EXPORT, spec, ExportResult, TIMEOUT_S)
+    )
+    output = tmp_path / "repaired.blend"
+    shutil.copyfile(c.job_dir / result.output_blend, output)
+    session = tmp_path / "animator.blend"
+    shutil.copyfile(FIXTURE_BLEND, session)
+    proc = subprocess.run(  # noqa: S603 - fixed argv, test-only
+        [
+            str(_blender()),
+            *("--background", "--factory-startup", "-noaudio", str(session)),
+            *("--python-exit-code", "3", "--python-expr", ADDON_SCRIPT, "--"),
+            *(str(REPO / "blender" / "addon"), str(output), "KIN_jobtest01_A", "Kinesis:A"),
+        ],
+        capture_output=True,
+        timeout=TIMEOUT_S,
+        check=False,
+    )
+    text = proc.stdout.decode(errors="replace")
+    assert proc.returncode == 0, text[-3000:] + proc.stderr.decode(errors="replace")[-2000:]
+    out = json.loads(next(x for x in text.splitlines() if x.startswith("ADDON"))[len("ADDON") :])
+    assert out["operators"] == [True, True]
+    assert out["panel"] is True
+    assert out["original_unchanged"] is True
+    assert out["active_action"] is None
+    assert out["tracks"] == ["Kinesis:Original", "Kinesis:A"]
+    candidate = Samples.from_worker(1, c.result.all_bones).heads["foot.L"]
+    assert np.abs(np.array(out["foot"]) - candidate).max() < 1e-6
+    original = next(b for b in extracted.all_bones if b.name == "foot.L").head
+    assert np.abs(np.array(out["muted_foot"]) - np.array(original)).max() < 1e-6
+    assert "already has" in out["second_import"]
+    assert out["unregistered"] is True

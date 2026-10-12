@@ -45,7 +45,7 @@ flowchart LR
 | Component | Owns | Never does |
 |---|---|---|
 | **Blender worker** (`blender/worker`) | Inspecting armatures, extracting world/local transforms, writing keyframes into new Actions, building NLA tracks, rendering crop and context frames, exporting `.blend` files | Repair math, detection, AI calls, network I/O |
-| **Blender add-on** (`blender/addon`) | Selection UI (rig, bones, frame range, floor), saving a copy and submitting it, importing the chosen repair Action (Phase 5/7) | Running repairs in the UI thread |
+| **Blender add-on** (`blender/addon`) | Selection UI (rig, bones, frame range, floor), saving a copy and submitting it, importing the chosen repair Action as an NLA track (done 2026-10-12) | Running repairs in the UI thread |
 | **Pure core** (`kinesis.analysis`, `.repair`, `.evaluation`) | Cropping, contact detection, two-bone IK, candidate generation, all metrics | Importing fastapi, redis, httpx or bpy (enforced by a test) |
 | **Orchestrator** (`kinesis.orchestration`) | DAG scheduling, retries, circuit breakers, caching, fault isolation, emitting events | Domain math |
 | **Providers** (`kinesis.providers`) | Prompting, structured output, and parsing and validating model responses | Executing anything a model returns |
