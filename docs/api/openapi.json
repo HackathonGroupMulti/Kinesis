@@ -2804,7 +2804,7 @@
     },
     "/v1/scenes": {
       "post": {
-        "description": "Accepts a single `.blend` file (at most KINESIS_MAX_UPLOAD_MB; it must start with the `BLENDER` magic bytes). The client filename is ignored. The file is stored as `input/scene.blend` in a new scene directory and inspected headlessly with auto-run scripts disabled.",
+        "description": "Accepts a single `.blend` file (at most KINESIS_MAX_UPLOAD_MB; it must start with the `BLENDER` magic bytes). The client filename is ignored. The file is stored as `input/scene.blend` in a new scene directory and inspected headlessly with auto-run scripts disabled. The body is streamed: an oversized upload is refused as soon as it crosses the limit (or up front, from its Content-Length).",
         "operationId": "upload_scene_v1_scenes_post",
         "requestBody": {
           "content": {
