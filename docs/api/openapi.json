@@ -2848,17 +2848,6 @@
               "application/problem+json": {}
             },
             "description": "Problem"
-          },
-          "501": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              },
-              "application/problem+json": {}
-            },
-            "description": "Problem"
           }
         },
         "summary": "Upload a .blend copy and inspect it",
@@ -2905,17 +2894,6 @@
             "description": "Problem"
           },
           "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              },
-              "application/problem+json": {}
-            },
-            "description": "Problem"
-          },
-          "501": {
             "content": {
               "application/json": {
                 "schema": {

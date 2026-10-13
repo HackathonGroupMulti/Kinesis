@@ -29,10 +29,6 @@ class ApiError(Exception):
         self.detail = detail
 
 
-def not_implemented(phase: str) -> ApiError:
-    return ApiError(501, ErrorCode.NOT_IMPLEMENTED, "Not implemented", f"Planned for {phase}")
-
-
 def problem_response(problem: Problem) -> JSONResponse:
     return JSONResponse(
         status_code=problem.status,
