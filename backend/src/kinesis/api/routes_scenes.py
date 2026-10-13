@@ -22,7 +22,7 @@ Service = Annotated[JobService, Depends(get_service)]
     "",
     status_code=status.HTTP_201_CREATED,
     response_model=SceneRef,
-    responses=problem_responses(413, 422, 501),
+    responses=problem_responses(413, 422),
     summary="Upload a .blend copy and inspect it",
     description=(
         "Accepts a single `.blend` file (at most KINESIS_MAX_UPLOAD_MB; it must start with "
@@ -41,7 +41,7 @@ async def upload_scene(request: Request, service: Service) -> SceneRef:
 @router.get(
     "/{scene_id}",
     response_model=SceneRef,
-    responses=problem_responses(404, 501),
+    responses=problem_responses(404),
     summary="Get an uploaded scene's inventory",
 )
 async def get_scene(scene_id: SceneIdPath, service: Service) -> SceneRef:
