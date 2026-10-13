@@ -12,6 +12,6 @@ Each ADR follows the format Context → Decision → Consequences. Status is one
 | [0006](0006-polling-event-log.md) | Progress via a polled event log | Accepted |
 | [0007](0007-frame-sequence-previews.md) | Previews as frame sequences | Accepted (S3 passed locally and on CI) |
 | [0008](0008-openapi-kotlin-codegen.md) | OpenAPI → Kotlin model generation | Accepted |
-| [0009](0009-httpx-token-factory-client.md) | httpx client for Token Factory | Accepted (pending S4) |
+| [0009](0009-httpx-token-factory-client.md) | httpx client for Token Factory | Accepted (S4 passed, with one deviation) |
 | [0010](0010-blender-4-5-lts.md) | Pin Blender 4.5 LTS | Accepted |
 | [0011](0011-python-task-runner.md) | Python task runner instead of make | Accepted |

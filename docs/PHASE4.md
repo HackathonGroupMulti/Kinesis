@@ -2,7 +2,7 @@
 
 **Status: complete (2026-10-08).** With `KINESIS_PROVIDER=token_factory`, two models now take part in each repair:
 - **Planner:** Nemotron 3 Super chooses the parameters for candidates A and B, through strict structured output.
-- **Visual evaluator:** MiniCPM-V-4.5 reviews the rendered frames.
+- **Visual evaluator:** GLM-5.3-Flash reviews the rendered frames. It replaced MiniCPM-V-4.5 after the vision-model bake-off of 2026-10-09 ([ADR 0009](ADR/0009-httpx-token-factory-client.md#vision-model-bake-off-2026-10-09)).
 
 Every model output still goes through the validation gate, so a bad or unavailable model degrades to the deterministic presets and the objective ranking. **The contract tests pass offline, and the live test passes when the flag is set.**
 
@@ -45,7 +45,7 @@ Every model output still goes through the validation gate, so a bad or unavailab
 
 ## Open owner decision
 
-- **C1:** no image-capable Nemotron exists on Token Factory, so vision runs on MiniCPM-V-4.5, which is not an NVIDIA model. Switching to a multimodal Nemotron later is a one-line change to `KINESIS_VISION_MODEL`. The startup check verifies image support.
+- **C1:** no image-capable Nemotron exists on Token Factory, so vision runs on GLM-5.3-Flash, which is not an NVIDIA model (chosen by the 2026-10-09 bake-off; MiniCPM-V-4.5 was the earlier default). Switching to a multimodal Nemotron later is a one-line change to `KINESIS_VISION_MODEL`. The startup check verifies image support.
 
 ## Running it
 

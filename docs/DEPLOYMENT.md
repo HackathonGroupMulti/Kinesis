@@ -80,4 +80,4 @@ See [`infra/nebius/README.md`](../infra/nebius/README.md). In outline:
 - **Models:** Token Factory over HTTPS, with the model ids from configuration (spike S4).
 - **Measured, not assumed:** local vs. serverless latency and cost, reported in METRICS.md.
 
-Spike S5 must still verify the Serverless Jobs submission API, artifact transfer, and status delivery (push vs. poll) before Phase 6 starts.
+Spike S5 is half done. The Serverless Jobs submission API, artifact transfer (bucket prefix mounted at `/work`) and status delivery (polling only) were checked against the Nebius docs on 2026-10-09, and both runners are contract-tested against them. Live verification waits on a Nebius account ([PHASE6.md](PHASE6.md#to-switch-it-on-owner)).
