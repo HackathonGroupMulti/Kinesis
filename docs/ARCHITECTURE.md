@@ -224,7 +224,7 @@ class ModelProvider(Protocol):
 | Task | Config key | Model (verified by spike S4, 2026-10-05) |
 |---|---|---|
 | Repair planning, constraint reasoning | `KINESIS_PLANNER_MODEL` | `nvidia/nemotron-3-super-120b-a12b` |
-| Rendered-frame evaluation (≤ 10 images per call) | `KINESIS_VISION_MODEL` | `openbmb/MiniCPM-V-4_5`. Token Factory has no image-capable Nemotron (no Nano Omni) |
+| Rendered-frame evaluation (≤ 10 images per call) | `KINESIS_VISION_MODEL` | `zai-org/GLM-5.3-Flash`, chosen by the 2026-10-09 bake-off (ADR 0009). Token Factory has no image-capable Nemotron (no Nano Omni) |
 | Cheap classification (e.g. instruction intent) | `KINESIS_CLASSIFIER_MODEL` | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
 
 Routing rules:
