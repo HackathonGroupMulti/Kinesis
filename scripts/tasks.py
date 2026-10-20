@@ -80,6 +80,20 @@ def blender_bin() -> str | None:
     return str(executables[0]) if executables else None
 
 
+def parse_java_major(version_output: str) -> int | None:
+    """Major version from ``java -version`` output (stderr), or None if unrecognised.
+
+    Handles the legacy scheme (``java version "1.8.0_503"`` is 8), the modern one
+    (``openjdk version "21.0.1"``, ``"25-ea"``) and lines printed before it, such as
+    ``Picked up JAVA_TOOL_OPTIONS: ...``.
+    """
+    match = re.search(r'version "(\d+)(?:\.(\d+))?', version_output)
+    if match is None:
+        return None
+    major = int(match[1])
+    return int(match[2] or 0) if major == 1 else major
+
+
 def gradle_java() -> tuple[str | None, int | None]:
     """The java executable Gradle will start with (JAVA_HOME, else PATH) and its major version."""
     home = os.environ.get("JAVA_HOME")
@@ -91,30 +105,34 @@ def gradle_java() -> tuple[str | None, int | None]:
     if exe is None:
         return None, None
     try:
-        # `java -version` writes to stderr: 'java version "1.8.0_503"' or 'openjdk version "21.0.1"'
         out = subprocess.run([exe, "-version"], capture_output=True, text=True, timeout=30).stderr
     except (OSError, subprocess.TimeoutExpired):
         return exe, None
-    match = re.search(r'version "(\d+)(?:\.(\d+))?', out)
-    if match is None:
-        return exe, None
-    major = int(match[1])
-    return exe, (int(match[2] or 0) if major == 1 else major)
+    return exe, parse_java_major(out)
 
 
 def java_report() -> tuple[str, bool]:
+    """A one-line report on the Java Gradle will use, and whether it certainly cannot work.
+
+    Only a missing java or a known version below ``GRADLE_MIN_JAVA`` blocks; an unrecognised
+    version is reported and left for Gradle to judge.
+    """
     exe, major = gradle_java()
     source = "JAVA_HOME" if os.environ.get("JAVA_HOME") else "PATH"
+    fix = f"Install JDK {GRADLE_MIN_JAVA}+ and point JAVA_HOME at it"
     if exe is None:
-        return f"not found ({source}); install JDK {GRADLE_MIN_JAVA}+ and set JAVA_HOME", False
-    if major is None or major < GRADLE_MIN_JAVA:
-        found = f"Java {major}" if major else "unknown version"
+        return f"not found ({source}). {fix}", True
+    if major is None:
         return (
-            f"{exe} ({source}) is {found}; Gradle needs Java {GRADLE_MIN_JAVA}+. "
-            f"Install JDK {GRADLE_MIN_JAVA}+ and point JAVA_HOME at it",
+            f"{exe} ({source}), version not recognised; Gradle needs Java {GRADLE_MIN_JAVA}+",
             False,
         )
-    return f"{exe} ({source}), Java {major}", True
+    if major < GRADLE_MIN_JAVA:
+        return (
+            f"{exe} ({source}) is Java {major}; Gradle needs Java {GRADLE_MIN_JAVA}+. {fix}",
+            True,
+        )
+    return f"{exe} ({source}), Java {major}", False
 
 
 # --------------------------------------------------------------------------- setup
@@ -391,8 +409,8 @@ def models(args: list[str]) -> int:
 
 @task("client", "Run the Compose Desktop review client")
 def client(args: list[str]) -> int:
-    report, ok = java_report()
-    if not ok:
+    report, blocking = java_report()
+    if blocking:
         print(f"java: {report}", file=sys.stderr)
         return 1
     gradlew = str(CLIENT_DIR / "gradlew.bat") if os.name == "nt" else "./gradlew"
