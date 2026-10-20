@@ -68,4 +68,6 @@ The add-on was a stub. Since 2026-10-12 it works end to end from the animator's 
 
 ## Open (outside Phase 7)
 
+Work merged after Phase 7, and everything still open, is tracked in [PROGRESS.md](PROGRESS.md).
+
 - **Nebius Serverless Jobs live runs** wait on the owner's Nebius AI Cloud account ([PHASE6.md](PHASE6.md)).

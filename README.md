@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/kinesis-logo.svg" alt="Kinesis" width="720"></p>
+
 # Kinesis
 
 **Kinesis cuts the time animators spend fixing localized animation defects.**
@@ -18,6 +20,8 @@ The MVP handles one repair class: **foot-contact / foot-sliding repair in Blende
 
 ## Status
 
+**Current state:** [docs/PROGRESS.md](docs/PROGRESS.md) is the progress report: what is merged, test counts, and what is open.
+
 - **Phase 0: design freeze (complete).** Architecture, contracts, test strategy, CI and spikes. See [docs/PHASE0.md](docs/PHASE0.md).
 - **Phase 1: fixture and analysis (complete).** The canonical fixture is built in Blender 4.5, extracted headlessly, and its injected slide is measured at 10.0 cm, both in CI and on the real `.blend`. See [docs/PHASE1.md](docs/PHASE1.md).
 - **Phase 2: deterministic repair (complete).** Candidates A and B remove 100% and 88% of the slide with zero collateral change. They are applied as non-destructive NLA layers and rendered as A/B previews. See [docs/PHASE2.md](docs/PHASE2.md).
@@ -33,6 +37,7 @@ The MVP handles one repair class: **foot-contact / foot-sliding repair in Blende
   - the test inventory.
 
   Reproduce them with `uv run task bench`, `uv run task vlm-bakeoff` and `uv run task specs`. `uv run task demo` runs the scripted end-to-end demo.
+- **Since Phase 7 (merged).** The Blender add-on works end to end from the animator's open file. Jobs interrupted by a server restart are resumed instead of failed. `uv run task setup` checks the Java version the Kotlin client's Gradle build needs. See [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ![Kinesis review client](docs/img/review-client.png)
 
