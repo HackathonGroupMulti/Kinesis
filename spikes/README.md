@@ -8,7 +8,7 @@ Each spike is a small, self-contained experiment with one question and a pass cr
 | **S2** | Does numpy FK (rest matrices + pose basis) match Blender's `pose.bones[].matrix` within 0.1 mm? | ADR 0003, Phase 1 | ✅ 0.63 µm max error |
 | **S3** | Can Workbench render headlessly at 512² in ≤ 1 s per frame, on the workstation and on GPU-less CI? | ADR 0007, `blender.yml` gating | ✅ workstation 0.057 s/frame; ✅ GPU-less CI 0.417 s/frame |
 | **S4** | Token Factory: base URL, model IDs, `json_schema` support, image input, `usage` fields | ADR 0009, Phase 4 | ✅ with one deviation: no Nemotron model accepts images, so vision uses MiniCPM-V-4.5 |
-| **S5** | Nebius Serverless Jobs: submit API, artifact exchange, status delivery, image startup latency, pricing | Phase 6 | pending (document only; see infra/nebius/README.md) |
+| **S5** | Nebius Serverless Jobs: submit API, artifact exchange, status delivery, image startup latency, pricing | Phase 6 | ◐ API contract checked against the Nebius docs and contract-tested; live latency, quotas and pricing pending a Nebius account |
 
 ## How to run
 
@@ -85,4 +85,4 @@ The test covered 60 random poses of a chain with non-zero rolls, under an armatu
 - **Phase 4 follow-up (2026-10-08):** the verbose catalog prices are USD **per token**, and Nemotron Super is not tagged `structured_outputs` even though it honours `json_schema`. See ADR 0009.
 
 ### S5: Serverless Jobs
-**Result: pending.** Answer the questions in [infra/nebius/README.md](../infra/nebius/README.md).
+**Result: partly answered (2026-10-09).** The submission API, authentication, status delivery (polling only) and storage client are settled from the Nebius docs; start-up latency, quotas and pricing need a live run. See the table in [infra/nebius/README.md](../infra/nebius/README.md#s5-questions).

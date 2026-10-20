@@ -337,4 +337,4 @@ Each dependency must earn its place. Boring and well-maintained beats fashionabl
 | kotlinx-coroutines (+ test) | Polling loops, a state flow, deterministic tests |
 | openapi-generator (Gradle plugin, models only) | Generates the DTOs from `docs/api/openapi.json`, so no field definitions are hand-copied |
 | kotlin-test, ktor-client-mock | Unit tests of serialization, state and polling recovery |
-| foojay toolchain resolver | Auto-provisions JDK 17 when the machine only has an older JDK |
+| foojay toolchain resolver | Auto-provisions the JDK 17 compile toolchain. Gradle itself still needs Java 17+ to start (`JAVA_HOME`) |

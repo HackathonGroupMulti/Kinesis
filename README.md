@@ -54,7 +54,8 @@ The MVP handles one repair class: **foot-contact / foot-sliding repair in Blende
 Prerequisites:
 - [uv](https://docs.astral.sh/uv/)
 - Git
-- Optional: Docker Desktop, Blender 4.5 LTS, JDK 17+ (the Gradle toolchain downloads one automatically)
+- Optional: Docker Desktop, Blender 4.5 LTS
+- For the Kotlin client: JDK 17+ as `JAVA_HOME` (Gradle 9 needs it to start; `uv run task setup` checks the version)
 
 ```bash
 uv run task setup          # install Python deps, create .env from .env.example

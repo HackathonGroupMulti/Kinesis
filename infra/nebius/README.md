@@ -1,6 +1,6 @@
 # Nebius deployment (Phase 6)
 
-This document is a placeholder that sets out the boundaries before any cloud code is written. All of it depends on **spike S5** (see [spikes/README.md](../../spikes/README.md)).
+This document set out the boundaries before any cloud code was written. Both Nebius runners are now implemented and contract-tested; see [docs/PHASE6.md](../../docs/PHASE6.md) for the design, the API contract and how to switch it on. Live runs wait on a Nebius account (concern C2).
 
 ## Components
 
@@ -18,10 +18,14 @@ This document is a placeholder that sets out the boundaries before any cloud cod
 - The container filesystem is read-only, apart from `/work`, which holds one job directory.
 - The argv is fixed, the same as in `LocalJobRunner`, and the command comes from the `WorkerCommand` enum.
 
-## Open questions for S5
+## S5 questions
 
-1. What is the submission API (REST or SDK)? What are its authentication model and quota limits?
-2. What startup latency should we expect for a ~1 GB Blender image? Can the image be cached?
-3. Is completion signalled by polling only, or is a webhook or event available? If webhooks exist, events must be idempotent; see FAILURE_MODES #20.
-4. What are the CPU-only versus GPU instance shapes and their prices? Workbench rendering may not need a GPU.
-5. Which Object Storage client should be used? S3-compatible boto3 would add a dependency, and that choice needs justification.
+Answers come from the Nebius docs (checked 2026-10-09, [PHASE6.md](../../docs/PHASE6.md#the-api-contract-followed-docsnebiuscom-verified-2026-10-09)). Anything that needs a live run is still open.
+
+| # | Question | Answer |
+|---|---|---|
+| 1 | Submission API, authentication, quota limits | **REST:** `POST https://api.nebius.cloud/ai/v1/jobs`, poll `GET /ai/v1/jobs/{id}`, cancel `POST /ai/v1/jobs/{id}:cancel`. **Auth:** a service-account key signs an RS256 JWT, exchanged (RFC 8693) for a 12 h bearer token. **Quotas:** open; a quota `ERROR` is surfaced with the platform's reason (FAILURE_MODES #19) |
+| 2 | Start-up latency for the ~2 GB worker image; image caching | **Open (live run).** Caching is not documented. The session runner (design B) pays start-up once per Kinesis job if it dominates |
+| 3 | Polling or webhooks | **Polling only.** No webhook or event delivery is documented |
+| 4 | CPU vs GPU shapes and prices | **Partly open.** The runner defaults to `cpu-d3` / `4vcpu-16gb`; prices are not yet recorded (`NEBIUS_PRICE_PER_HOUR_USD`). Local measurements show CPU rendering is the main cost, so a GPU shape would recover most of the time ([PHASE6.md](../../docs/PHASE6.md#local-versus-container-workstation-2026-10-09)) |
+| 5 | Object Storage client | **boto3**, in the optional `nebius` extra only. The job's bucket prefix is mounted into the container at `/work`, so the worker needs no client; only the API side uploads and downloads |
