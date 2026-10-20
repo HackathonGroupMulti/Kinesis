@@ -8,7 +8,7 @@
 | [uv](https://docs.astral.sh/uv/) | **yes** | Manages Python 3.12 and all dependencies |
 | Git | **yes** | |
 | Blender 4.5 LTS | for Blender tests and real jobs | `uv run task setup-blender` downloads the pinned portable build (4.5.14, checksum-verified) into `.tools/`. It sits alongside any other Blender install |
-| JDK 17+ | for the Kotlin client | The Gradle toolchain auto-provisions it if you only have an older JDK |
+| JDK 17+ | for the Kotlin client | Gradle 9 needs Java 17+ just to start, so point `JAVA_HOME` at a JDK 17+ if your default `java` is older. `uv run task setup` reports the version Gradle will use |
 | Docker Desktop | optional | For `docker compose up` |
 
 ### Commands

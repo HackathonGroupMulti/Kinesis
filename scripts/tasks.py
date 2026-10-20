@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -22,6 +23,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TOOLS = ROOT / ".tools"
 CLIENT_DIR = ROOT / "client" / "kotlin-desktop"
+# Gradle 9 itself needs this Java to start. The foojay toolchain only provisions the JDK
+# that compiles the client, so it does not help when JAVA_HOME / PATH java is older.
+GRADLE_MIN_JAVA = 17
 
 # ADR 0010: the pinned Blender LTS. Checksums come from download.blender.org/.../blender-<v>.sha256
 BLENDER_VERSION = "4.5.14"
@@ -76,6 +80,43 @@ def blender_bin() -> str | None:
     return str(executables[0]) if executables else None
 
 
+def gradle_java() -> tuple[str | None, int | None]:
+    """The java executable Gradle will start with (JAVA_HOME, else PATH) and its major version."""
+    home = os.environ.get("JAVA_HOME")
+    if home:
+        candidate = Path(home, "bin", "java.exe" if os.name == "nt" else "java")
+        exe = str(candidate) if candidate.is_file() else None
+    else:
+        exe = shutil.which("java")
+    if exe is None:
+        return None, None
+    try:
+        # `java -version` writes to stderr: 'java version "1.8.0_503"' or 'openjdk version "21.0.1"'
+        out = subprocess.run([exe, "-version"], capture_output=True, text=True, timeout=30).stderr
+    except (OSError, subprocess.TimeoutExpired):
+        return exe, None
+    match = re.search(r'version "(\d+)(?:\.(\d+))?', out)
+    if match is None:
+        return exe, None
+    major = int(match[1])
+    return exe, (int(match[2] or 0) if major == 1 else major)
+
+
+def java_report() -> tuple[str, bool]:
+    exe, major = gradle_java()
+    source = "JAVA_HOME" if os.environ.get("JAVA_HOME") else "PATH"
+    if exe is None:
+        return f"not found ({source}); install JDK {GRADLE_MIN_JAVA}+ and set JAVA_HOME", False
+    if major is None or major < GRADLE_MIN_JAVA:
+        found = f"Java {major}" if major else "unknown version"
+        return (
+            f"{exe} ({source}) is {found}; Gradle needs Java {GRADLE_MIN_JAVA}+. "
+            f"Install JDK {GRADLE_MIN_JAVA}+ and point JAVA_HOME at it",
+            False,
+        )
+    return f"{exe} ({source}), Java {major}", True
+
+
 # --------------------------------------------------------------------------- setup
 
 
@@ -87,7 +128,7 @@ def setup(_: list[str]) -> int:
         shutil.copyfile(ROOT / ".env.example", env_file)
         print("created .env from .env.example")
     print(f"blender {BLENDER_VERSION}: {blender_bin() or 'not found (uv run task setup-blender)'}")
-    print(f"java: {shutil.which('java') or 'not found (Gradle toolchain will provision JDK 17)'}")
+    print(f"java for the Kotlin client: {java_report()[0]}")
     print(f"docker: {shutil.which('docker') or 'not found (optional)'}")
     return rc
 
@@ -350,6 +391,10 @@ def models(args: list[str]) -> int:
 
 @task("client", "Run the Compose Desktop review client")
 def client(args: list[str]) -> int:
+    report, ok = java_report()
+    if not ok:
+        print(f"java: {report}", file=sys.stderr)
+        return 1
     gradlew = str(CLIENT_DIR / "gradlew.bat") if os.name == "nt" else "./gradlew"
     return run([gradlew, "run", *args], cwd=CLIENT_DIR)
 
