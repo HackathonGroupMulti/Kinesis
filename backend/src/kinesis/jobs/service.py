@@ -539,10 +539,14 @@ class JobService:
         """FAILURE_MODES #26: resume the jobs a restart interrupted.
 
         - PENDING and RUNNING jobs run the repair DAG again from the start, on the job's own
-          copy of the scene. Every step is deterministic and rewrites its own files, so the
-          rerun produces the same candidates; results in a shared cache (Redis) are reused.
+          copy of the scene. Each step rewrites its own files. Steps cached in a shared cache
+          (Redis) are reused; anything else runs again, including model calls, so with a
+          model planner the rerun may plan different candidates and is billed again.
         - APPLYING jobs export the recorded decision again.
         - A job already resumed ``MAX_RESUMES`` times, or whose inputs are gone, is FAILED.
+
+        Limitation: a worker process that outlived a hard kill of the API (not a normal
+        shutdown, which kills workers) can still be writing to the job directory.
         """
         resumed = failed = 0
         for status in (JobStatus.PENDING, JobStatus.RUNNING, JobStatus.APPLYING):
@@ -565,7 +569,9 @@ class JobService:
     async def _resume(self, job: RepairJob) -> str | None:
         """Restart one interrupted job. Returns why it cannot be resumed, or None."""
         events = await self.store.list_events(job.job_id, after_seq=0, limit=1_000_000)
-        resumes = sum(1 for e in events if "resume" in e.data)
+        resumes = sum(
+            1 for e in events if e.type is JobEventType.STATUS_CHANGED and "resume" in e.data
+        )
         if resumes >= MAX_RESUMES:
             return f"not resumed again after {resumes} resumes"
         scene = await self.store.get_scene(job.selection.scene_id)

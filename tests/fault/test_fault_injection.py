@@ -437,11 +437,11 @@ async def test_restart_resumes_a_running_job(make_service: Any) -> None:
 
 async def test_restart_resumes_an_applying_job(make_service: Any) -> None:
     """A decision recorded before the restart is exported after it."""
-    service, runner, _ = await _start_hung_job(make_service, "export")
+    service, runner, job_id = await _start_hung_job(make_service, "export")
     await service.wait_idle()
-    [job] = await service.list_jobs(limit=1, before=None)
+    job = await service.get_job(job_id)
     assert job.status is JobStatus.AWAITING_DECISION
-    await service.decide(job.job_id, DecisionRequest(choice=DecisionChoice.A))
+    await service.decide(job_id, DecisionRequest(choice=DecisionChoice.A))
     await _wait_for(lambda: runner.in_flight > 0, "the export to start")
     await _die(service)
 
@@ -450,11 +450,28 @@ async def test_restart_resumes_an_applying_job(make_service: Any) -> None:
     assert (report.resumed, report.failed) == (1, 0)
     await restarted.wait_idle()
 
-    done = await restarted.get_job(job.job_id)
+    done = await restarted.get_job(job_id)
     assert done.status is JobStatus.COMPLETED
     assert done.output is not None
     assert done.decision is not None
     assert done.decision.choice is DecisionChoice.A
+
+
+async def test_app_startup_resumes_interrupted_jobs(make_service: Any) -> None:
+    """The API's startup hook runs recovery, so a restarted server resumes the job."""
+    from kinesis.main import create_app
+
+    service, runner, job_id = await _start_hung_job(make_service, "extract_scope")
+    await _wait_for(lambda: runner.in_flight > 0, "extract_scope to start")
+    await _die(service)
+
+    restarted = _restarted(service)
+    app = create_app(restarted)
+    async with app.router.lifespan_context(app):
+        await restarted.wait_idle()
+    job = await restarted.get_job(job_id)
+    assert job.status is JobStatus.AWAITING_DECISION
+    assert len(await _resume_events(restarted, job_id)) == 1
 
 
 async def test_restart_gives_up_after_max_resumes(make_service: Any) -> None:

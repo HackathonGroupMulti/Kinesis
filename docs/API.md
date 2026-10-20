@@ -92,7 +92,7 @@ stateDiagram-v2
 
 When one candidate fails and the other succeeds, the job still reaches `AWAITING_DECISION`. The failed candidate carries `status: FAILED` and an `error`.
 
-**Server restarts.** A job that was `PENDING`, `RUNNING` or `APPLYING` when the API stopped is resumed at startup (FAILURE_MODES #26). Its status does not change. The resume appends a `STATUS_CHANGED` event whose `from` and `to` are equal and whose `data.resume` is the resume count. A resumed `RUNNING` job reruns from the start: its `defect`, `plan`, `candidates` and `evaluation` are cleared and filled again, and node events repeat. A job resumed twice already is `FAILED` instead.
+**Server restarts.** A job that was `PENDING`, `RUNNING` or `APPLYING` when the API stopped is resumed at startup (FAILURE_MODES #26). Its status does not change. The resume appends a `STATUS_CHANGED` event whose `from` and `to` are equal and whose `data.resume` is the resume count. A resumed `RUNNING` job reruns from the start: its `defect`, `plan`, `candidates` and `evaluation` are cleared and filled again, and node events repeat. With a model planner the new candidates can differ from the interrupted run's, so clients should re-read them rather than keep earlier ids. A job resumed twice already is `FAILED` instead.
 
 **Events.** The `seq` field increases monotonically per job and starts at 1. To poll:
 1. Call `GET /events?after_seq=<last seen>`.
