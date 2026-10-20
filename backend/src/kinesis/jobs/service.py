@@ -5,7 +5,8 @@
 - job requests are validated against the scene inventory before anything is stored;
 - each job runs its repair DAG in a background task; the decision runs a one-node DAG
   (``apply_selected``) that exports the chosen layer;
-- jobs left RUNNING or APPLYING by a previous process are marked FAILED at startup.
+- jobs left PENDING, RUNNING or APPLYING by a previous process are resumed at startup, up
+  to ``MAX_RESUMES`` times each; after that, or when their inputs are gone, they are FAILED.
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ from kinesis.schemas import (
     EvaluationReport,
     EventPage,
     HumanDecision,
+    JobEvent,
+    JobEventType,
     JobStatus,
     ProductStats,
     RepairCandidate,
@@ -65,6 +68,10 @@ from kinesis.storage.store import IdempotencyConflict, InvalidTransition
 log = logging.getLogger("kinesis.jobs")
 
 BLEND_MAGIC = b"BLENDER"
+
+# FAILURE_MODES #26: how often one job is restarted after the process died under it. A job
+# that keeps taking the process down must not resume forever.
+MAX_RESUMES = 2
 
 
 class RequestError(Exception):
@@ -104,6 +111,12 @@ class ServiceConfig:
 class SweepReport:
     jobs: int
     scenes: int
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryReport:
+    resumed: int
+    failed: int
 
 
 class JobService:
@@ -340,12 +353,17 @@ class JobService:
             if outcome.status not in (NodeStatus.PENDING, NodeStatus.SKIPPED):
                 NODE_DURATION.labels(node_id).observe(outcome.elapsed_ms / 1000)
 
-    async def _run(self, job_id: str, scene: SceneRef) -> None:
+    async def _run(self, job_id: str, scene: SceneRef, *, resumed: bool = False) -> None:
         with bind(job_id=job_id):
-            await self._run_bound(job_id, scene)
+            await self._run_bound(job_id, scene, resumed=resumed)
 
-    async def _run_bound(self, job_id: str, scene: SceneRef) -> None:
-        job = await self.store.transition(job_id, JobStatus.RUNNING, message="repair DAG started")
+    async def _run_bound(self, job_id: str, scene: SceneRef, *, resumed: bool) -> None:
+        if resumed:  # already RUNNING; recover() has cleared the interrupted run's results
+            job = await self.get_job(job_id)
+        else:
+            job = await self.store.transition(
+                job_id, JobStatus.RUNNING, message="repair DAG started"
+            )
         ctx = JobContext(self, job, scene, self.artifacts.job_dir(job_id))
         try:
             nodes, codecs = build_repair_dag(ctx)
@@ -517,21 +535,87 @@ class JobService:
                 409, ErrorCode.INVALID_STATE, "Job cannot be cancelled", f"status {current.status}"
             ) from exc
 
-    async def recover(self) -> int:
-        """FAILURE_MODES #26: jobs interrupted by a restart are marked FAILED."""
-        count = 0
+    async def recover(self) -> RecoveryReport:
+        """FAILURE_MODES #26: resume the jobs a restart interrupted.
+
+        - PENDING and RUNNING jobs run the repair DAG again from the start, on the job's own
+          copy of the scene. Each step rewrites its own files. Steps cached in a shared cache
+          (Redis) are reused; anything else runs again, including model calls, so with a
+          model planner the rerun may plan different candidates and is billed again.
+        - APPLYING jobs export the recorded decision again.
+        - A job already resumed ``MAX_RESUMES`` times, or whose inputs are gone, is FAILED.
+
+        Limitation: a worker process that outlived a hard kill of the API (not a normal
+        shutdown, which kills workers) can still be writing to the job directory.
+        """
+        resumed = failed = 0
         for status in (JobStatus.PENDING, JobStatus.RUNNING, JobStatus.APPLYING):
             for job_id in await self.store.list_jobs_with_status(status):
                 job = await self.store.get_job(job_id)
                 if job is None:
                     continue
+                reason = await self._resume(job)
+                if reason is None:
+                    resumed += 1
+                    continue
                 error = ErrorInfo(
-                    code=ErrorCode.INTERNAL, message="interrupted by a server restart"
+                    code=ErrorCode.INTERNAL, message=f"interrupted by a server restart; {reason}"
                 )
                 await self.store.save_job(job.model_copy(update={"error": error}))
                 await self._transition(job_id, JobStatus.FAILED, error.message)
-                count += 1
-        return count
+                failed += 1
+        return RecoveryReport(resumed=resumed, failed=failed)
+
+    async def _resume(self, job: RepairJob) -> str | None:
+        """Restart one interrupted job. Returns why it cannot be resumed, or None."""
+        events = await self.store.list_events(job.job_id, after_seq=0, limit=1_000_000)
+        resumes = sum(
+            1 for e in events if e.type is JobEventType.STATUS_CHANGED and "resume" in e.data
+        )
+        if resumes >= MAX_RESUMES:
+            return f"not resumed again after {resumes} resumes"
+        scene = await self.store.get_scene(job.selection.scene_id)
+        blend = self.artifacts.job_dir(job.job_id) / "input" / "scene.blend"
+        # A restart during create_job can leave the job's copy of the scene missing or partial.
+        if scene is None or not blend.is_file() or blend.stat().st_size != scene.size_bytes:
+            return "the job's copy of the scene is missing or incomplete"
+        candidate: RepairCandidate | None = None
+        if job.status is JobStatus.APPLYING:
+            chosen = job.decision.candidate_id if job.decision else None
+            candidate = next((c for c in job.candidates if c.candidate_id == chosen), None)
+            if candidate is None:
+                return "the chosen candidate is missing"
+        count = resumes + 1
+        await self.store.append_event(
+            JobEvent(
+                seq=1,
+                job_id=job.job_id,
+                ts=now(),
+                type=JobEventType.STATUS_CHANGED,
+                message=f"resumed after a server restart ({count}/{MAX_RESUMES})",
+                data={"from": job.status.value, "to": job.status.value, "resume": count},
+            )
+        )
+        log.warning("job.resumed", extra={"job_id": job.job_id, "status": job.status.value})
+        if candidate is not None:
+            self._spawn(job.job_id, self._apply(job, scene, candidate))
+        elif job.status is JobStatus.PENDING:
+            self._spawn(job.job_id, self._run(job.job_id, scene))
+        else:
+            # Drop what the interrupted run stored, so the rerun starts from a clean record.
+            fresh = job.model_copy(
+                update={
+                    "defect": None,
+                    "plan": None,
+                    "candidates": (),
+                    "original_artifacts": (),
+                    "evaluation": None,
+                    "error": None,
+                }
+            )
+            await self.store.save_job(fresh)
+            self._spawn(job.job_id, self._run(job.job_id, scene, resumed=True))
+        return None
 
     # ------------------------------------------------------------ reads
 
@@ -588,4 +672,4 @@ class JobService:
         return path, media
 
 
-__all__ = ["JobService", "RequestError", "ServiceConfig"]
+__all__ = ["MAX_RESUMES", "JobService", "RecoveryReport", "RequestError", "ServiceConfig"]

@@ -8,6 +8,7 @@ user sees. Backoff sleeps are recorded, not slept.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from typing import Any
 
 import pytest
@@ -20,6 +21,8 @@ from kinesis.providers.mock import MockProvider
 from kinesis.schemas import (
     CandidateLabel,
     CandidateStatus,
+    DecisionChoice,
+    DecisionRequest,
     EvaluatorStatus,
     JobEvent,
     JobEventType,
@@ -357,23 +360,160 @@ async def test_no_defect_completes_without_candidates(make_service: Any) -> None
     assert job.candidates == ()
 
 
-async def test_restart_marks_running_jobs_failed(make_service: Any) -> None:
-    runner = FakeJobRunner({"extract_scope": [Fault.HANG]})
+async def _wait_for(predicate: Any, what: str) -> None:
+    """Poll ``predicate`` (plain or async) until it is true."""
+    for _ in range(2000):  # up to 10 s; CI runners can be slow
+        value = predicate()
+        if inspect.isawaitable(value):
+            value = await value
+        if value:
+            return
+        await asyncio.sleep(0.005)
+    raise AssertionError(f"timed out waiting for {what}")
+
+
+async def _die(service: Any) -> None:
+    """Simulate the process dying: every background task stops where it is."""
+    for task in list(service._tasks.values()):
+        task.cancel()
+    await service.wait_idle()
+
+
+def _restarted(service: Any, runner: Any = None) -> Any:
+    """A new process on the same database and job directories."""
+    from kinesis.jobs.service import JobService
+
+    return JobService(
+        service.store,
+        service.artifacts,
+        runner if runner is not None else FakeJobRunner(),
+        service.provider,
+        service.config,
+        sleep=service.sleep,
+        jitter=service.jitter,
+    )
+
+
+async def _start_hung_job(make_service: Any, node: str) -> tuple[Any, Any, str]:
+    runner = FakeJobRunner({node: [Fault.HANG]})
     service = make_service(runner=runner)
     scene = await service.upload_scene(chunks(FAKE_BLEND))
     job, _ = await service.create_job(job_request(scene_id=scene.scene_id), "key-00000001")
-    for _ in range(200):
-        if runner.in_flight:
-            break
-        await asyncio.sleep(0.005)
-    for task in list(service._tasks.values()):  # simulate the process dying
-        task.cancel()
+    return service, runner, job.job_id
+
+
+async def _resume_events(service: Any, job_id: str) -> list[Any]:
+    events = await service.store.list_events(job_id, after_seq=0, limit=10_000)
+    return [e for e in events if "resume" in e.data]
+
+
+async def test_restart_resumes_a_running_job(make_service: Any) -> None:
+    """FAILURE_MODES #26: a job interrupted mid-DAG runs again and reaches review."""
+    service, runner, job_id = await _start_hung_job(make_service, "apply_a")
+
+    async def partly_done() -> bool:
+        job = await service.get_job(job_id)
+        return runner.in_flight > 0 and job.defect is not None and len(job.candidates) == 2
+
+    await _wait_for(partly_done, "the DAG to reach apply_a")
+    await _die(service)
+    interrupted = await service.get_job(job_id)
+    assert interrupted.status is JobStatus.RUNNING
+
+    restarted = _restarted(service)
+    report = await restarted.recover()
+    assert (report.resumed, report.failed) == (1, 0)
+    await restarted.wait_idle()
+
+    job = await restarted.get_job(job_id)
+    assert job.status is JobStatus.AWAITING_DECISION
+    assert job.error is None
+    assert sorted(c.label.value for c in job.candidates) == ["A", "B"]  # no leftovers
+    assert all(c.status is CandidateStatus.SUCCEEDED for c in job.candidates)
+    assert job.evaluation is not None
+    [event] = await _resume_events(restarted, job_id)
+    assert event.message == "resumed after a server restart (1/2)"
+
+
+async def test_restart_resumes_an_applying_job(make_service: Any) -> None:
+    """A decision recorded before the restart is exported after it."""
+    service, runner, job_id = await _start_hung_job(make_service, "export")
     await service.wait_idle()
-    assert await service.recover() == 1
-    failed = await service.get_job(job.job_id)
-    assert failed.status is JobStatus.FAILED
-    assert failed.error is not None
-    assert "restart" in failed.error.message
+    job = await service.get_job(job_id)
+    assert job.status is JobStatus.AWAITING_DECISION
+    await service.decide(job_id, DecisionRequest(choice=DecisionChoice.A))
+    await _wait_for(lambda: runner.in_flight > 0, "the export to start")
+    await _die(service)
+
+    restarted = _restarted(service)
+    report = await restarted.recover()
+    assert (report.resumed, report.failed) == (1, 0)
+    await restarted.wait_idle()
+
+    done = await restarted.get_job(job_id)
+    assert done.status is JobStatus.COMPLETED
+    assert done.output is not None
+    assert done.decision is not None
+    assert done.decision.choice is DecisionChoice.A
+
+
+async def test_app_startup_resumes_interrupted_jobs(make_service: Any) -> None:
+    """The API's startup hook runs recovery, so a restarted server resumes the job."""
+    from kinesis.main import create_app
+
+    service, runner, job_id = await _start_hung_job(make_service, "extract_scope")
+    await _wait_for(lambda: runner.in_flight > 0, "extract_scope to start")
+    await _die(service)
+
+    restarted = _restarted(service)
+    app = create_app(restarted)
+    async with app.router.lifespan_context(app):
+        await restarted.wait_idle()
+    job = await restarted.get_job(job_id)
+    assert job.status is JobStatus.AWAITING_DECISION
+    assert len(await _resume_events(restarted, job_id)) == 1
+
+
+async def test_restart_gives_up_after_max_resumes(make_service: Any) -> None:
+    """A job that keeps dying with the process is FAILED instead of looping."""
+    from kinesis.jobs.service import MAX_RESUMES
+
+    service, runner, job_id = await _start_hung_job(make_service, "extract_scope")
+    await _wait_for(lambda: runner.in_flight > 0, "extract_scope to start")
+    await _die(service)
+    current = service
+    for _ in range(MAX_RESUMES):
+        runner = FakeJobRunner({"extract_scope": [Fault.HANG]})
+        current = _restarted(current, runner)
+        assert (await current.recover()).resumed == 1
+        await _wait_for(lambda r=runner: r.in_flight > 0, "the resumed run")
+        await _die(current)
+
+    final = _restarted(current)
+    report = await final.recover()
+    assert (report.resumed, report.failed) == (0, 1)
+    job = await final.get_job(job_id)
+    assert job.status is JobStatus.FAILED
+    assert job.error is not None
+    assert job.error.code is ErrorCode.INTERNAL
+    assert f"not resumed again after {MAX_RESUMES} resumes" in job.error.message
+    assert len(await _resume_events(final, job_id)) == MAX_RESUMES
+
+
+async def test_restart_fails_a_job_whose_scene_copy_is_gone(make_service: Any) -> None:
+    service, runner, job_id = await _start_hung_job(make_service, "extract_scope")
+    await _wait_for(lambda: runner.in_flight > 0, "extract_scope to start")
+    await _die(service)
+    (service.artifacts.job_dir(job_id) / "input" / "scene.blend").unlink()
+
+    restarted = _restarted(service)
+    report = await restarted.recover()
+    assert (report.resumed, report.failed) == (0, 1)
+    job = await restarted.get_job(job_id)
+    assert job.status is JobStatus.FAILED
+    assert job.error is not None
+    assert "restart" in job.error.message
+    assert "missing or incomplete" in job.error.message
 
 
 async def test_original_and_candidates_share_one_crop_camera(make_service: Any) -> None:

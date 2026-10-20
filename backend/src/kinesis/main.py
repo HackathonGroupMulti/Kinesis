@@ -46,8 +46,11 @@ def create_app(service: JobService | None = None) -> FastAPI:
         svc = ensure_service(app)
         await verify_provider(svc)
         recovered = await svc.recover()
-        if recovered:
-            log.warning("jobs.recovered_after_restart", extra={"count": recovered})
+        if recovered.resumed or recovered.failed:
+            log.warning(
+                "jobs.recovered_after_restart",
+                extra={"resumed": recovered.resumed, "failed": recovered.failed},
+            )
         settings = get_settings()
         sweeper = None
         if settings.kinesis_retention_days > 0:
