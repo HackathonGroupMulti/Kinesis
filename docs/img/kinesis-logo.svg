@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1278 400" role="img" aria-labelledby="t">
+  <title id="t">Kinesis</title>
+  <defs>
+    <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <circle cx="7" cy="7" r="3.2" fill="#FF2D3D"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.55"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="dotmask"><rect width="400" height="400" fill="url(#fade)"/></mask>
+  </defs>
+  <rect width="1278" height="400" fill="#0A0A0F"/>
+
+  <g transform="translate(24,20) scale(0.9)">
+
+  <!-- slanted badge -->
+  <polygon points="96,24 384,24 304,376 16,376" fill="#0A0A0F"/>
+  <polygon points="96,24 384,24 304,376 16,376" fill="url(#dots)" mask="url(#dotmask)"/>
+  <polygon points="96,24 384,24 304,376 16,376" fill="none" stroke="#FFFFFF" stroke-width="6"/>
+
+  <!-- speed lines -->
+  <g stroke="#FF2D3D" stroke-width="6" stroke-linecap="round">
+    <line x1="58" y1="108" x2="120" y2="108"/>
+    <line x1="44" y1="140" x2="92" y2="140"/>
+    <line x1="34" y1="290" x2="96" y2="290"/>
+    <line x1="26" y1="322" x2="66" y2="322"/>
+  </g>
+
+  <!-- the X: white = the sliding motion, red = the repaired motion -->
+  <polygon points="110,62 176,62 318,338 236,338" fill="#FFFFFF"/>
+  <polygon points="300,52 368,52 150,348 70,348" fill="#FF2D3D" stroke="#0A0A0F" stroke-width="8" stroke-linejoin="miter"/>
+  <polygon points="300,52 368,52 150,348 70,348" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+
+  <!-- locked contact point -->
+  <polygon points="216,158 258,200 216,242 174,200" fill="#FFD60A" stroke="#0A0A0F" stroke-width="9"/>
+  <polygon points="216,184 232,200 216,216 200,200" fill="#0A0A0F"/>
+</g>
+
+  <!-- wordmark: red offset shadow, black keyline, white face -->
+  <g>
+    <path d="M470.5,127.0 L506.5,127.0 L475.0,277.0 L439.0,277.0 Z M493.9,187.0 L551.5,127.0 L599.5,127.0 L483.2,238.0 Z M514.1,205.0 L547.4,175.0 L574.0,277.0 L529.0,277.0 Z" fill="#FF2D3D"/>
+    <path d="M619.0,127.0 L655.0,127.0 L623.5,277.0 L587.5,277.0 Z" fill="#FF2D3D"/>
+    <path d="M674.5,127.0 L710.5,127.0 L679.0,277.0 L643.0,277.0 Z M761.5,127.0 L797.5,127.0 L766.0,277.0 L730.0,277.0 Z M674.5,127.0 L716.5,127.0 L766.0,277.0 L724.0,277.0 Z" fill="#FF2D3D"/>
+    <path d="M817.0,127.0 L853.0,127.0 L821.5,277.0 L785.5,277.0 Z M817.0,127.0 L925.0,127.0 L918.1,160.0 L810.1,160.0 Z M804.7,185.5 L897.7,185.5 L881.8,218.5 L797.8,218.5 Z M792.4,244.0 L900.4,244.0 L893.5,277.0 L785.5,277.0 Z" fill="#FF2D3D"/>
+    <path d="M965.5,127.0 L1058.5,127.0 L1051.6,160.0 L973.6,160.0 L968.2,185.5 L932.2,185.5 L940.1,148.0 Z M932.2,185.5 L1046.2,185.5 L1039.3,218.5 L925.3,218.5 Z M1003.3,218.5 L1039.3,218.5 L1031.4,256.0 L1006.0,277.0 L913.0,277.0 L919.9,244.0 L997.9,244.0 Z" fill="#FF2D3D"/>
+    <path d="M1078.0,127.0 L1114.0,127.0 L1082.5,277.0 L1046.5,277.0 Z" fill="#FF2D3D"/>
+    <path d="M1154.5,127.0 L1247.5,127.0 L1240.6,160.0 L1162.6,160.0 L1157.2,185.5 L1121.2,185.5 L1129.1,148.0 Z M1121.2,185.5 L1235.2,185.5 L1228.3,218.5 L1114.3,218.5 Z M1192.3,218.5 L1228.3,218.5 L1220.4,256.0 L1195.0,277.0 L1102.0,277.0 L1108.9,244.0 L1186.9,244.0 Z" fill="#FF2D3D"/>
+  </g>
+  <g>
+    <path d="M461.5,118.0 L497.5,118.0 L466.0,268.0 L430.0,268.0 Z M484.9,178.0 L542.5,118.0 L590.5,118.0 L474.2,229.0 Z M505.1,196.0 L538.4,166.0 L565.0,268.0 L520.0,268.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M610.0,118.0 L646.0,118.0 L614.5,268.0 L578.5,268.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M665.5,118.0 L701.5,118.0 L670.0,268.0 L634.0,268.0 Z M752.5,118.0 L788.5,118.0 L757.0,268.0 L721.0,268.0 Z M665.5,118.0 L707.5,118.0 L757.0,268.0 L715.0,268.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M808.0,118.0 L844.0,118.0 L812.5,268.0 L776.5,268.0 Z M808.0,118.0 L916.0,118.0 L909.1,151.0 L801.1,151.0 Z M795.7,176.5 L888.7,176.5 L872.8,209.5 L788.8,209.5 Z M783.4,235.0 L891.4,235.0 L884.5,268.0 L776.5,268.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M956.5,118.0 L1049.5,118.0 L1042.6,151.0 L964.6,151.0 L959.2,176.5 L923.2,176.5 L931.1,139.0 Z M923.2,176.5 L1037.2,176.5 L1030.3,209.5 L916.3,209.5 Z M994.3,209.5 L1030.3,209.5 L1022.4,247.0 L997.0,268.0 L904.0,268.0 L910.9,235.0 L988.9,235.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M1069.0,118.0 L1105.0,118.0 L1073.5,268.0 L1037.5,268.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+    <path d="M1145.5,118.0 L1238.5,118.0 L1231.6,151.0 L1153.6,151.0 L1148.2,176.5 L1112.2,176.5 L1120.1,139.0 Z M1112.2,176.5 L1226.2,176.5 L1219.3,209.5 L1105.3,209.5 Z M1183.3,209.5 L1219.3,209.5 L1211.4,247.0 L1186.0,268.0 L1093.0,268.0 L1099.9,235.0 L1177.9,235.0 Z" fill="#0A0A0F" stroke="#0A0A0F" stroke-width="10" stroke-linejoin="miter"/>
+  </g>
+  <g>
+    <path d="M461.5,118.0 L497.5,118.0 L466.0,268.0 L430.0,268.0 Z M484.9,178.0 L542.5,118.0 L590.5,118.0 L474.2,229.0 Z M505.1,196.0 L538.4,166.0 L565.0,268.0 L520.0,268.0 Z" fill="#FFFFFF"/>
+    <path d="M610.0,118.0 L646.0,118.0 L614.5,268.0 L578.5,268.0 Z" fill="#FFFFFF"/>
+    <path d="M665.5,118.0 L701.5,118.0 L670.0,268.0 L634.0,268.0 Z M752.5,118.0 L788.5,118.0 L757.0,268.0 L721.0,268.0 Z M665.5,118.0 L707.5,118.0 L757.0,268.0 L715.0,268.0 Z" fill="#FFFFFF"/>
+    <path d="M808.0,118.0 L844.0,118.0 L812.5,268.0 L776.5,268.0 Z M808.0,118.0 L916.0,118.0 L909.1,151.0 L801.1,151.0 Z M795.7,176.5 L888.7,176.5 L872.8,209.5 L788.8,209.5 Z M783.4,235.0 L891.4,235.0 L884.5,268.0 L776.5,268.0 Z" fill="#FFFFFF"/>
+    <path d="M956.5,118.0 L1049.5,118.0 L1042.6,151.0 L964.6,151.0 L959.2,176.5 L923.2,176.5 L931.1,139.0 Z M923.2,176.5 L1037.2,176.5 L1030.3,209.5 L916.3,209.5 Z M994.3,209.5 L1030.3,209.5 L1022.4,247.0 L997.0,268.0 L904.0,268.0 L910.9,235.0 L988.9,235.0 Z" fill="#FFFFFF"/>
+    <path d="M1069.0,118.0 L1105.0,118.0 L1073.5,268.0 L1037.5,268.0 Z" fill="#FFFFFF"/>
+    <path d="M1145.5,118.0 L1238.5,118.0 L1231.6,151.0 L1153.6,151.0 L1148.2,176.5 L1112.2,176.5 L1120.1,139.0 Z M1112.2,176.5 L1226.2,176.5 L1219.3,209.5 L1105.3,209.5 Z M1183.3,209.5 L1219.3,209.5 L1211.4,247.0 L1186.0,268.0 L1093.0,268.0 L1099.9,235.0 L1177.9,235.0 Z" fill="#FFFFFF"/>
+  </g>
+
+  <!-- yellow speed slash + tagline -->
+  <polygon points="454,292 730,292 722,304 446,304" fill="#FFD60A"/>
+  <text x="748" y="304" fill="#FFFFFF" font-family="'JetBrains Mono','Consolas','Menlo',monospace" font-size="20" font-weight="700" letter-spacing="5">MOTION, REPAIRED.</text>
+</svg>
